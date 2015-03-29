@@ -118,15 +118,16 @@ RESULT
 ## Folder Structure
 ```
 jinqJs/
-├── demo/       <-- Demo code using angularJs to demonstrate some LINQ queries
+├── demo/           <-- Demo code using angularJs to demonstrate some LINQ queries
 │   ├── index.html
 │   ├── README.md
 │   ├── script.js
-├── versions/     <-- A history of versions
+├── versions/           <-- A history of versions
 │   ├── v.0.1
 │   └── v.x.x
-├── jinqjs.js       <-- Will always be the latest stable version
-├── jinsjs.min.js     <-- Latest minified version
+├── jinqjs-unstable.js  <-- Current work in progress version
+├── jinqjs.js           <-- Will always be the latest stable version
+├── jinsjs.min.js       <-- Latest minified version
 ├── LICENSE
 └── README.md
 ```
