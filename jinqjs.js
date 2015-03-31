@@ -26,12 +26,17 @@
   
   ------------------------------------------------------------------------------------------
   DATE:     3/23/15
-  VERSION:  .11
+  VERSION:  .1.1
   NOTE:     Added leftJoin(), avg(), and predicate for on().
   
   DATE:     3/26/15
-  VERSION:  .12
+  VERSION:  .1.2
   NOTE:     Minor corrections
+  
+  DATE:     3/30/15
+  VERSION   .1.3
+  NOTE:     Added ability to sort asc/desc on plain arrays
+            concat() and union()
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
@@ -182,17 +187,17 @@ var jinqJs = function (settings) {
           for (var index = 0; index < complexFields.length; index++) {
               prior = (index > 0 ? complexFields[index - 1] : null);
               complex = complexFields[index];
-              field = complex.field;
+              field = (hasProperty(complex, 'field') ? complex.field : null);
               order = (hasProperty(complex, 'sort') && complex.sort === 'desc' ? -1 : 1);
 
               result.sort(function (first, second) {
-                  lValue = (isNaN(first[field]) ? first[field] : Number(first[field]));
-                  rValue = (isNaN(second[field]) ? second[field] : Number(second[field]));
+                  lValue = (field === null ? first : (isNaN(first[field]) ? first[field] : Number(first[field])));
+                  rValue = (field === null ? second : (isNaN(second[field]) ? second[field] : Number(second[field])));
 
-                  if (lValue < rValue && (prior === null || first[prior.field] == second[prior.field]))
+                  if (lValue < rValue && (prior === null || (field === null || first[prior.field] == second[prior.field])))
                       return -1 * order;
 
-                  if (lValue > rValue && (prior === null || first[prior.field] == second[prior.field]))
+                  if (lValue > rValue && (prior === null || (field === null || first[prior.field] == second[prior.field])))
                       return 1 * order;
 
                   return 0;
@@ -486,6 +491,15 @@ var jinqJs = function (settings) {
 
         return collection;
     },
+    
+    _concat = function() {
+        collections.func = null;
+        
+        for(var index=0;index<arguments.length;index++)
+          result = result.concat(arguments[index]);
+        
+        return this;
+    },
 
     _top = function (amount) {
         var totalRows = 0;
@@ -734,6 +748,21 @@ var jinqJs = function (settings) {
 
         return this;
     },
+    
+    _union = function() {
+      if (arguments.length === 0 || !isArray(arguments[0]) || arguments[0].length === 0) return this;
+
+      var collection = flattenCollection(arguments);
+
+      _concat(collection);
+      groups = [];      
+      for(var field in arguments[0][0])
+        groups.push(field);
+
+      _count();
+      
+      return this;
+    },
 
     _on = function () {
         if (arguments.length === 0 || !hasProperty(collections, 'func')) return this;
@@ -773,6 +802,8 @@ var jinqJs = function (settings) {
         orderBy: _orderBy,
         on: _on,
         join: _join,
-        leftJoin: _leftJoin
+        leftJoin: _leftJoin,
+        concat: _concat,
+        union: _union
     };
 };
