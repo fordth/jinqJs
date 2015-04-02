@@ -37,6 +37,10 @@
   VERSION   .1.3
   NOTE:     Added ability to sort asc/desc on plain arrays
             concat() and union()
+            
+  DATE:     4/1/15
+  VERSION   .1.4
+  NOTE:     Added support for positional for orderBy and Select on {field: #} objects
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
@@ -180,24 +184,47 @@ var jinqJs = function (settings) {
           var complex = null;
           var prior = null;
           var field = null;
+          var firstField = null;
+          var secondField = null;
+          var priorFirstField = null;
+          var priorSecondField = null;
           var order = 1;
           var lValue = null;
           var rValue = null;
+          var isNumField = false;
 
           for (var index = 0; index < complexFields.length; index++) {
               prior = (index > 0 ? complexFields[index - 1] : null);
               complex = complexFields[index];
               field = (hasProperty(complex, 'field') ? complex.field : null);
               order = (hasProperty(complex, 'sort') && complex.sort === 'desc' ? -1 : 1);
-
+              isNumField = (field !== null && !isNaN(field) ? true : false);
+              
               result.sort(function (first, second) {
-                  lValue = (field === null ? first : (isNaN(first[field]) ? first[field] : Number(first[field])));
-                  rValue = (field === null ? second : (isNaN(second[field]) ? second[field] : Number(second[field])));
+                  if (isNumField){
+                    firstField = Object.keys(first)[field];
+                    secondField = Object.keys(second)[field];
+                    
+                    if (prior !== null){
+                      priorFirstField = Object.keys(first)[prior.field];
+                      priorSecondField = Object.keys(second)[prior.field];
+                    }
+                  }
+                  else
+                  {
+                    firstField = secondField = field;
+                    
+                    if (prior !== null)
+                      priorFirstField = priorSecondField = prior.field;
+                  }
+                    
+                  lValue = (field === null ? first : (isNaN(first[firstField]) ? first[firstField] : Number(first[firstField])));
+                  rValue = (field === null ? second : (isNaN(second[secondField]) ? second[secondField] : Number(second[secondField])));
 
-                  if (lValue < rValue && (prior === null || (field === null || first[prior.field] == second[prior.field])))
+                  if (lValue < rValue && (prior === null || (field === null || first[priorFirstField] == second[priorSecondField])))
                       return -1 * order;
 
-                  if (lValue > rValue && (prior === null || (field === null || first[prior.field] == second[prior.field])))
+                  if (lValue > rValue && (prior === null || (field === null || first[priorFirstField] == second[priorSecondField])))
                       return 1 * order;
 
                   return 0;
@@ -468,7 +495,12 @@ var jinqJs = function (settings) {
               for (var field = 0; field < fields.length; field++) {
                   if (fieldIsObject) {
                       if (hasProperty(fields[field], 'field'))
-                          srcFieldName = fields[field].field;
+                      {
+                          if (isNaN(fields[field].field))
+                            srcFieldName = fields[field].field;
+                          else
+                            srcFieldName = Object.keys(result[index])[fields[field].field];
+                      }
   
                       dstFieldName = (hasProperty(fields[field], 'text') ? fields[field].text : fields[field].field);
                   } else {
