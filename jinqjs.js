@@ -39,8 +39,12 @@
             concat() and union()
             
   DATE:     4/1/15
-  VERSION   .1.4
+  VERSION:   .1.4
   NOTE:     Added support for positional for orderBy and Select on {field: #} objects
+  
+  DATE:     4/2/15
+  VERSION:  .1.5
+  NTE:      Added ability to join() on() collections with simple arrays 
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
@@ -105,6 +109,7 @@ var jinqJs = function (settings) {
           var row = null;
           var isMatch = false;
           var ret = [];
+          var isObj = false;
 
           findFirst = findFirst || false;
           for (var index = 0; index < collection.length; index++) {
@@ -113,7 +118,8 @@ var jinqJs = function (settings) {
               for (var field in obj) {
 
                   row = collection[index];
-                  if (row[field] != obj[field]) {
+                  isObj = isObject(row);
+                  if ( (!isObj && row != obj[field]) || (isObj && row[field] != obj[field])) {
                       isMatch = false;
                       break;
                   }
@@ -341,9 +347,13 @@ var jinqJs = function (settings) {
                   }
 
                   if (matches !== null) {
-                      matches.forEach(function (rItem) {
-                          ret.push(mergeObjectsFields([rItem, lItem]));
-                      });
+                      if (isString(matches[0]))
+                        ret.push(lItem);
+                      else{
+                        matches.forEach(function (rItem) {
+                            ret.push(mergeObjectsFields([rItem, lItem]));
+                        });
+                      }
                   }
                   else {
                       if (joinType === 'left') {
