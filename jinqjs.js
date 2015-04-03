@@ -44,7 +44,12 @@
   
   DATE:     4/2/15
   VERSION:  .1.5
-  NTE:      Added ability to join() on() collections with simple arrays 
+  NOTE:      Added ability to join() on() collections with simple arrays 
+  
+  DATE:     4/3/15
+  VESION:   .1.6
+  NOTE:      Added index as 2nd parameter for .where() and .select()
+             Added .not(), .in()
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
@@ -54,6 +59,7 @@ var jinqJs = function (settings) {
     var collections = [],
         result = [],
         groups = [],
+        notted = false,
         identityUsed = false;
 
     /* Constructor Code */
@@ -498,7 +504,7 @@ var jinqJs = function (settings) {
             obj = {};
             if (fieldIsPredicate)
             {
-              obj = fields(result[index]);
+              obj = fields(result[index], index);
             }
             else
             {
@@ -582,7 +588,7 @@ var jinqJs = function (settings) {
             var row = result[index];
 
             if (isPredicateFunc) {
-                if (predicate(row))
+                if (predicate(row, index))
                     collection.push(row);
             }
             else {
@@ -814,6 +820,43 @@ var jinqJs = function (settings) {
 
         return this;
     },
+    
+    _in = function(collection, field) {
+      var ret = [];
+      var outerField = null;
+      var innerField = null;
+      var match = false;
+      
+      if (collection.length === 0 || result.length === 0)
+        return this;
+      
+      var isInnerSimple = !isObject(collection[0]);
+      var isOuterSimple = !isObject(result[0]);
+      
+      if ( (!isInnerSimple || !isOuterSimple) && typeof(field) === 'undefined' )
+        throw 'Invalid field or missing field!';
+      
+      for(var outer=0;outer<result.length;outer++) {
+        outerField = (isOuterSimple ? result[outer] : result[outer][field]);
+        match = false;
+        for(var inner=0;inner<collection.length;inner++) {
+            innerField = (isInnerSimple ? collection[inner] : collection[inner][field]);
+          
+            if ( outerField === innerField )
+            {
+              match = true;
+              break;
+            }
+        }
+        
+        if( (match && !notted) || (!match && notted))
+          ret.push(result[outer]);
+      }
+      
+      notted = false;
+      result = ret;
+      return this;
+    },
 
     _join = function () {
         joinIt('inner', arguments);
@@ -825,6 +868,12 @@ var jinqJs = function (settings) {
         joinIt('left', arguments);
 
         return this;
+    },
+    
+    _not = function() {
+      notted = true;
+      
+      return this;
     };
 
     return {
@@ -846,6 +895,8 @@ var jinqJs = function (settings) {
         join: _join,
         leftJoin: _leftJoin,
         concat: _concat,
-        union: _union
+        union: _union,
+        not: _not,
+        in: _in
     };
 };
