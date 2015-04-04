@@ -50,6 +50,15 @@
   VESION:   .1.6
   NOTE:      Added index as 2nd parameter for .where() and .select()
              Added .not(), .in()
+             
+  DATE:     4/4/15
+  VERSION   1.00
+  NOTE:     Added ability to do .distinct(), .max(),. min(), .avg() on simple arrays.
+            Added abiility to union simple arrays.
+            .in() can except multiple columns to compare to.
+            If .orderBy() uses positional, then all fields ordered must be positional
+            Added support for .identity() on simple arrays. When on simple arrays the value gets set to a "Value" column by default.
+            Included unit tests
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
@@ -62,13 +71,15 @@ var jinqJs = function (settings) {
         notted = false,
         identityUsed = false;
 
+    jinqJs.settings = jinqJs.settings || {};
+
     /* Constructor Code */
     if (typeof settings !== 'undefined') {
         jinqJs.settings = settings;
     }
     else {
         jinqJs.settings = {
-            includeIdentity: false
+            includeIdentity: jinqJs.settings.includeIdentity || false
         };
     }
 
@@ -125,7 +136,7 @@ var jinqJs = function (settings) {
 
                   row = collection[index];
                   isObj = isObject(row);
-                  if ( (!isObj && row != obj[field]) || (isObj && row[field] != obj[field])) {
+                  if ((!isObj && row != obj[field]) || (isObj && row[field] != obj[field])) {
                       isMatch = false;
                       break;
                   }
@@ -189,6 +200,7 @@ var jinqJs = function (settings) {
              }
          }
 
+         groups = [];
          return collection;
      },
 
@@ -211,25 +223,24 @@ var jinqJs = function (settings) {
               field = (hasProperty(complex, 'field') ? complex.field : null);
               order = (hasProperty(complex, 'sort') && complex.sort === 'desc' ? -1 : 1);
               isNumField = (field !== null && !isNaN(field) ? true : false);
-              
+
               result.sort(function (first, second) {
-                  if (isNumField){
-                    firstField = Object.keys(first)[field];
-                    secondField = Object.keys(second)[field];
-                    
-                    if (prior !== null){
-                      priorFirstField = Object.keys(first)[prior.field];
-                      priorSecondField = Object.keys(second)[prior.field];
-                    }
+                  if (isNumField) {
+                      firstField = Object.keys(first)[field];
+                      secondField = Object.keys(second)[field];
+
+                      if (prior !== null) {
+                          priorFirstField = Object.keys(first)[prior.field];
+                          priorSecondField = Object.keys(second)[prior.field];
+                      }
                   }
-                  else
-                  {
-                    firstField = secondField = field;
-                    
-                    if (prior !== null)
-                      priorFirstField = priorSecondField = prior.field;
+                  else {
+                      firstField = secondField = field;
+
+                      if (prior !== null)
+                          priorFirstField = priorSecondField = prior.field;
                   }
-                    
+
                   lValue = (field === null ? first : (isNaN(first[firstField]) ? first[firstField] : Number(first[firstField])));
                   rValue = (field === null ? second : (isNaN(second[secondField]) ? second[secondField] : Number(second[secondField])));
 
@@ -354,11 +365,11 @@ var jinqJs = function (settings) {
 
                   if (matches !== null) {
                       if (isString(matches[0]))
-                        ret.push(lItem);
-                      else{
-                        matches.forEach(function (rItem) {
-                            ret.push(mergeObjectsFields([rItem, lItem]));
-                        });
+                          ret.push(lItem);
+                      else {
+                          matches.forEach(function (rItem) {
+                              ret.push(mergeObjectsFields([rItem, lItem]));
+                          });
                       }
                   }
                   else {
@@ -386,8 +397,8 @@ var jinqJs = function (settings) {
           collections = [];
           collections.func = joinType;
           for (var index = 0; index < args.length; index++) {
-            if (args[index].length > 0)             //Could be a url string here or an array here. Length is ok to use either way
-                collections.push(args[index]);
+              if (args[index].length > 0)             //Could be a url string here or an array here. Length is ok to use either way
+                  collections.push(args[index]);
           }
       };
 
@@ -397,7 +408,7 @@ var jinqJs = function (settings) {
         var callback = null;
 
         if (arguments.length === 0) return this;
-       
+
         for (var index = 0; index < arguments.length; index++) {
             if (arguments[index] === null || arguments[index].length === 0)
                 continue;
@@ -494,44 +505,41 @@ var jinqJs = function (settings) {
             fieldIsObject = true;
         }
         else if (isFunction(arguments[0])) {
-          fields = arguments[0];
-          fieldIsPredicate = true;
+            fields = arguments[0];
+            fieldIsPredicate = true;
         }
         else
             fields = arguments;
 
         for (var index = 0; index < result.length; index++) {
             obj = {};
-            if (fieldIsPredicate)
-            {
-              obj = fields(result[index], index);
+            if (fieldIsPredicate) {
+                obj = fields(result[index], index);
             }
-            else
-            {
-              for (var field = 0; field < fields.length; field++) {
-                  if (fieldIsObject) {
-                      if (hasProperty(fields[field], 'field'))
-                      {
-                          if (isNaN(fields[field].field))
-                            srcFieldName = fields[field].field;
-                          else
-                            srcFieldName = Object.keys(result[index])[fields[field].field];
-                      }
-  
-                      dstFieldName = (hasProperty(fields[field], 'text') ? fields[field].text : fields[field].field);
-                  } else {
-                      dstFieldName = srcFieldName = fields[field];
-                  }
-  
-                  if (hasProperty(fields[field], 'value')) {
-                      if (isFunction(fields[field].value))
-                          obj[dstFieldName] = fields[field].value(result[index]);
-                      else
-                          obj[dstFieldName] = fields[field].value;
-                  } else {
-                      obj[dstFieldName] = (hasProperty( result[index], srcFieldName ) ? result[index][srcFieldName] : result[index]);
-                  }
-              }
+            else {
+                for (var field = 0; field < fields.length; field++) {
+                    if (fieldIsObject) {
+                        if (hasProperty(fields[field], 'field')) {
+                            if (isNaN(fields[field].field))
+                                srcFieldName = fields[field].field;
+                            else
+                                srcFieldName = Object.keys(result[index])[fields[field].field];
+                        }
+
+                        dstFieldName = (hasProperty(fields[field], 'text') ? fields[field].text : fields[field].field);
+                    } else {
+                        dstFieldName = srcFieldName = fields[field];
+                    }
+
+                    if (hasProperty(fields[field], 'value')) {
+                        if (isFunction(fields[field].value))
+                            obj[dstFieldName] = fields[field].value(result[index]);
+                        else
+                            obj[dstFieldName] = fields[field].value;
+                    } else {
+                        obj[dstFieldName] = (hasProperty(result[index], srcFieldName) ? result[index][srcFieldName] : result[index]);
+                    }
+                }
             }
 
             collection.push(obj);
@@ -539,13 +547,13 @@ var jinqJs = function (settings) {
 
         return collection;
     },
-    
-    _concat = function() {
+
+    _concat = function () {
         collections.func = null;
-        
-        for(var index=0;index<arguments.length;index++)
-          result = result.concat(arguments[index]);
-        
+
+        for (var index = 0; index < arguments.length; index++)
+            result = result.concat(arguments[index]);
+
         return this;
     },
 
@@ -649,21 +657,27 @@ var jinqJs = function (settings) {
     },
 
     _distinct = function () {
-        if (isEmpty(arguments)) return this;
-
         var collection = [];
         var row = null;
         var field = null;
+        var index = 0;
 
-        for (var index = 0; index < result.length; index++) {
+        if (arguments.length === 0) {
+            for (index = 0; index < result.length; index++) {
+                if (collection.indexOf(result[index]) === -1)
+                    collection.push(result[index]);
+            }
+        }
+        else {
+            for (index = 0; index < result.length; index++) {
+                row = condenseToFields(result[index], arguments);
+                for (var fieldIndex = 0; fieldIndex < arguments.length; fieldIndex++) {
 
-            row = condenseToFields(result[index], arguments);
-            for (var fieldIndex = 0; fieldIndex < arguments.length; fieldIndex++) {
-
-                field = arguments[fieldIndex];
-                if (!arrayItemFieldValueExists(collection, field, row[field])) {
-                    collection.push(row);
-                    break;
+                    field = arguments[fieldIndex];
+                    if (!arrayItemFieldValueExists(collection, field, row[field])) {
+                        collection.push(row);
+                        break;
+                    }
                 }
             }
         }
@@ -682,14 +696,23 @@ var jinqJs = function (settings) {
     _sum = function () {
         var sum = {};
 
-        result = aggregator(arguments, function (lValue, rValue, keys) {
-            var key = keys;//JSON.stringify(keys);
+        if (groups.length === 0) {
+            sum = 0;
+            for (var index = 0; index < result.length; index++)
+                sum += (arguments.length === 0 ? result[index] : result[index][arguments[0]]);
 
-            if (!hasProperty(sum, key))
-                sum[key] = 0;
+            result = [sum];
+        }
+        else {
+            result = aggregator(arguments, function (lValue, rValue, keys) {
+                var key = keys;//JSON.stringify(keys);
 
-            return sum[key] += rValue;
-        });
+                if (!hasProperty(sum, key))
+                    sum[key] = 0;
+
+                return sum[key] += rValue;
+            });
+        }
 
         return this;
     },
@@ -697,17 +720,26 @@ var jinqJs = function (settings) {
     _avg = function () {
         var avg = {};
 
-        result = aggregator(arguments, function (lValue, rValue, keys) {
-            var key = JSON.stringify(keys);
+        if (groups.length === 0) {
+            avg = 0;
+            for (var index = 0; index < result.length; index++)
+                avg += (arguments.length === 0 ? result[index] : result[index][arguments[0]]);
 
-            if (!hasProperty(avg, key))
-                avg[key] = { count: 0, sum: 0 };
+            result = [avg / result.length];
+        }
+        else {
+            result = aggregator(arguments, function (lValue, rValue, keys) {
+                var key = JSON.stringify(keys);
 
-            avg[key].count++;
-            avg[key].sum += rValue;
+                if (!hasProperty(avg, key))
+                    avg[key] = { count: 0, sum: 0 };
 
-            return avg[key].sum / avg[key].count;
-        });
+                avg[key].count++;
+                avg[key].sum += rValue;
+
+                return avg[key].sum / avg[key].count;
+            });
+        }
 
         return this;
     },
@@ -729,34 +761,56 @@ var jinqJs = function (settings) {
 
     _min = function () {
         var minValue = {};
+        var value = 0;
 
-        result = aggregator(arguments, function (lValue, rValue, keys) {
-            var key = JSON.stringify(keys);
-            if (!hasProperty(minValue, key))
-                minValue[key] = 0;
+        if (groups.length === 0) {
+            minValue = -1;
+            for (var index = 0; index < result.length; index++) {
+                value = (arguments.length === 0 ? Number(result[index]) : Number(result[index][arguments[0]]));
+                minValue = (value < minValue || minValue === -1 ? value : minValue);
+            }
 
-            if (minValue[key] === 0 || rValue < minValue[key])
-                minValue[key] = rValue;
+            result = [minValue];
+        } else {
+            result = aggregator(arguments, function (lValue, rValue, keys) {
+                var key = JSON.stringify(keys);
+                if (!hasProperty(minValue, key))
+                    minValue[key] = 0;
 
-            return minValue[key];
-        });
+                if (minValue[key] === 0 || rValue < minValue[key])
+                    minValue[key] = rValue;
+
+                return minValue[key];
+            });
+        }
 
         return this;
     },
 
     _max = function () {
         var maxValue = {};
+        var value = 0;
 
-        result = aggregator(arguments, function (lValue, rValue, keys) {
-            var key = JSON.stringify(keys);
-            if (!hasProperty(maxValue, key))
-                maxValue[key] = 0;
+        if (groups.length === 0) {
+            maxValue = -1;
+            for (var index = 0; index < result.length; index++) {
+                value = (arguments.length === 0 ? Number(result[index]) : Number(result[index][arguments[0]]));
+                maxValue = (value > maxValue || maxValue === -1 ? value : maxValue);
+            }
 
-            if (rValue > maxValue[key])
-                maxValue[key] = rValue;
+            result = [maxValue];
+        } else {
+            result = aggregator(arguments, function (lValue, rValue, keys) {
+                var key = JSON.stringify(keys);
+                if (!hasProperty(maxValue, key))
+                    maxValue[key] = 0;
 
-            return maxValue[key];
-        });
+                if (rValue > maxValue[key])
+                    maxValue[key] = rValue;
+
+                return maxValue[key];
+            });
+        }
 
         return this;
     },
@@ -764,11 +818,25 @@ var jinqJs = function (settings) {
     _identity = function () {
         var id = 1;
         var label = (arguments.length === 0 ? 'ID' : arguments[0]);
+        var isSimple = (result.length > 0 && !isObject(result[0]));
+        var ret = [];
+        var obj = null;
 
         identityUsed = true;
         for (var index = 0; index < result.length; index++) {
-            result[index][label] = id++;
+            if (isSimple) {
+                obj = {};
+                obj[label] = id++;
+                obj.Value = result[index];
+
+                ret.push(obj);
+            }
+            else
+                result[index][label] = id++;
         }
+
+        if (isSimple)
+            result = ret;
 
         return this;
     },
@@ -796,20 +864,28 @@ var jinqJs = function (settings) {
 
         return this;
     },
-    
-    _union = function() {
-      if (arguments.length === 0 || !isArray(arguments[0]) || arguments[0].length === 0) return this;
 
-      var collection = flattenCollection(arguments);
+    _union = function () {
+        if (arguments.length === 0 || !isArray(arguments[0]) || arguments[0].length === 0) return this;
 
-      _concat(collection);
-      groups = [];      
-      for(var field in arguments[0][0])
-        groups.push(field);
+        if (!isObject(arguments[0][0])) {
+            for (var index = 0; index < arguments.length; index++)
+                _concat(arguments[index]);
 
-      _count();
-      
-      return this;
+            _distinct();
+        }
+        else {
+            var collection = flattenCollection(arguments);
+
+            _concat(collection);
+            groups = [];
+            for (var field in arguments[0][0])
+                groups.push(field);
+
+            _count();
+        }
+
+        return this;
     },
 
     _on = function () {
@@ -820,42 +896,56 @@ var jinqJs = function (settings) {
 
         return this;
     },
-    
-    _in = function(collection, field) {
-      var ret = [];
-      var outerField = null;
-      var innerField = null;
-      var match = false;
-      
-      if (collection.length === 0 || result.length === 0)
-        return this;
-      
-      var isInnerSimple = !isObject(collection[0]);
-      var isOuterSimple = !isObject(result[0]);
-      
-      if ( (!isInnerSimple || !isOuterSimple) && typeof(field) === 'undefined' )
-        throw 'Invalid field or missing field!';
-      
-      for(var outer=0;outer<result.length;outer++) {
-        outerField = (isOuterSimple ? result[outer] : result[outer][field]);
-        match = false;
-        for(var inner=0;inner<collection.length;inner++) {
-            innerField = (isInnerSimple ? collection[inner] : collection[inner][field]);
-          
-            if ( outerField === innerField )
-            {
-              match = true;
-              break;
+
+    _in = function () {
+        var ret = [];
+        var outerField = null;
+        var innerField = null;
+        var match = false;
+        var fields = [];
+        var collection = null;
+
+        if (arguments.length === 0)
+            return this;
+
+        collection = arguments[0];
+        if (collection.length === 0 || result.length === 0)
+            return this;
+
+        var isInnerSimple = !isObject(collection[0]);
+        var isOuterSimple = !isObject(result[0]);
+
+        if ((!isInnerSimple || !isOuterSimple) && arguments.length < 2)
+            throw 'Invalid field or missing field!';
+
+        if (arguments.length < 2)
+            fields = [0]; //Just a dummy position holder
+        else
+            for (var i = 1; i < arguments.length; i++) fields.push(arguments[i]);
+
+        for (var outer = 0; outer < result.length; outer++) {
+            for (var inner = 0; inner < collection.length; inner++) {
+                for (var index = 0; index < fields.length; index++) {
+                    outerField = (isOuterSimple ? result[outer] : result[outer][fields[index]]);
+                    innerField = (isInnerSimple ? collection[inner] : collection[inner][fields[index]]);
+
+                    match = (outerField === innerField);
+
+                    if ((!match && !notted))// || (match && notted))
+                        break;
+                }
+
+                if (match)
+                    break;
             }
+
+            if ((inner < collection.length && !notted) || (inner === collection.length && notted))
+                ret.push(result[outer]);
         }
-        
-        if( (match && !notted) || (!match && notted))
-          ret.push(result[outer]);
-      }
-      
-      notted = false;
-      result = ret;
-      return this;
+
+        notted = false;
+        result = ret;
+        return this;
     },
 
     _join = function () {
@@ -869,11 +959,11 @@ var jinqJs = function (settings) {
 
         return this;
     },
-    
-    _not = function() {
-      notted = true;
-      
-      return this;
+
+    _not = function () {
+        notted = true;
+
+        return this;
     };
 
     return {

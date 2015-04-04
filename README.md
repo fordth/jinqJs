@@ -2,6 +2,10 @@
 jinqJs provides a simple, leightweight & fast way to perform SQL like queries on javaScript arrays, collections and web services using LINQ expressions.
 You can visit the [jinqJs.com](http://www.jinqJs.com) for more examples and demos.
 
+
+## Unit Tested
+All stable versions have had a 100% success rate with all 80+ unit tests.
+
 ## Online API Documentation
 The full API documentation can be found [here](https://onedrive.live.com/redir?resid=197F25F0703D2355!4722&authkey=!AKTubE9PRfruzj0&ithint=file%2cdocx)
 
@@ -125,9 +129,11 @@ jinqJs/
 ├── versions/           <-- A history of versions
 │   ├── v.0.1
 │   └── v.x.x
+├── tests/              <-- Unit test using jasmine JS
+│   └── index.html      <-- Home page for unit test results
 ├── jinqjs-unstable.js  <-- Current work in progress version
 ├── jinqjs.js           <-- Will always be the latest stable version
-├── jinsjs.min.js       <-- Latest minified version
+├── jinsjs.min.js       <-- Latest minified stable version
 ├── LICENSE
 └── README.md
 ```
