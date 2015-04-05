@@ -9,6 +9,12 @@ All stable versions have had a 100% success rate with all 80+ unit tests.
 ## Online API Documentation
 The full API documentation can be found [here](https://onedrive.live.com/redir?resid=197F25F0703D2355!4722&authkey=!AKTubE9PRfruzj0&ithint=file%2cdocx)
 
+## Installing via the NuGet Package
+You can start using jinqJs by simply using the NuGet package manager.
+ ```
+ Install-Package jinqJs
+ ```
+
 ## Examples
 **Joining Results With A Web Service Response And A Collection**
 ```JavaScript
