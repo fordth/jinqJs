@@ -44,6 +44,8 @@
             var result = jinqJs().from(people1).select();
 
             expect(result.length).toEqual(4);
+            expect(result[0].Age).toEqual(29);
+            expect(result[3].Age).toEqual(11);
         });
 
         it('async', function (done) {
@@ -60,12 +62,17 @@
             var result = jinqJs().from(people1, people2, people3).select();
 
             expect(result.length).toEqual(8);
+            expect(result[0].Age).toEqual(29);
+            expect(result[4].Age).toEqual(14);
+            expect(result[7].Age).toEqual(1);
         });
 
         it('UNION All (Simple)', function () {
             var result = jinqJs().from(simpleAges1, simpleAges2).select();
 
             expect(result.length).toEqual(8);
+            expect(result[0]).toEqual(29);
+            expect(result[4]).toEqual(14);
         });
     });
 
@@ -74,12 +81,18 @@
             var result = jinqJs().from(people1).concat(people2, people3).select();
 
             expect(result.length).toEqual(8);
+            expect(result[0].Age).toEqual(29);
+            expect(result[4].Age).toEqual(14);
+            expect(result[7].Age).toEqual(1);
         });
 
         it('(Simple)', function () {
             var result = jinqJs().from(simpleAges1).concat(simpleAges2, [88,99]).select();
 
             expect(result.length).toEqual(10);
+            expect(result[0]).toEqual(29);
+            expect(result[4]).toEqual(14);
+            expect(result[8]).toEqual(88);
         });
     });
 
@@ -88,12 +101,26 @@
             var result = jinqJs().from(people1).union(people2, people3).select();
 
             expect(result.length).toEqual(7);
+            expect(result[0].Age).toEqual(29);
+            expect(result[2].Age).toEqual(14);
+            expect(result[4].Age).toEqual(20);
         });
 
-        it('(Simple)', function () {
+        it('(Simple) Numbers', function () {
             var result = jinqJs().from(simpleAges1).union(simpleAges2, [30,50]).select();
 
             expect(result.length).toEqual(8);
+            expect(result[0]).toEqual(29);
+            expect(result[6]).toEqual(60);
+            expect(result[7]).toEqual(50);
+        });
+
+        it('(Simple) Strings', function () {
+            var result = jinqJs().from(['Tom','Frank']).union(['Bob', 'Tom' ], ['Chris']).select();
+
+            expect(result.length).toEqual(4);
+            expect(result[0]).toEqual('Tom');
+            expect(result[3]).toEqual('Chris');
         });
     });
 
@@ -112,11 +139,6 @@
             expect(result[0].people).toEqual(123);
             expect(result[0].temp).toEqual(85);
         });
-
-        //We might want to throw an exception here if someone tries to put a simple array on a join
-        xit('(Simple)', function () {
-            
-        });
     });
 
     describe('.on()', function () {
@@ -125,6 +147,7 @@
 
             expect(result.length).toEqual(1);
             expect(result[0].Title).toEqual('Its a boy!');
+            expect(result[0].Age).toEqual(57);
         });
 
         it('(Complex - Predicate - inner join)', function () {
@@ -132,8 +155,11 @@
                 return left.Location === right.Location;
             }).select();
 
-            //Multiple matches
+            //Multiple matches (Both are Male because its using the field from the left side collection)
             expect(result.length).toEqual(2);
+            expect(result[0].Sex).toEqual('Male');
+            expect(result[1].Sex).toEqual('Male');
+
 
             var result = jinqJs().from(people1, people2).join(sexType).on(function (left, right) {
                 return left.Location === right.Location && left.Sex === right.Sex;
@@ -142,6 +168,7 @@
             //Single match
             expect(result.length).toEqual(1);
             expect(result[0].Title).toEqual('Its a boy!');
+            expect(result[0].Age).toEqual(57);
         });
 
         it('(Complex - Predicate - outer join)', function () {
@@ -149,8 +176,18 @@
                 return left.Location === right.Location && left.Sex === right.Sex;
             }).select();
 
-            //Multiple matches
             expect(result.length).toEqual(7);
+
+            var result = jinqJs().from(people2).leftJoin(sexType).on(function (left, right) {
+                return left.Location === right.Location && left.Sex === right.Sex;
+            }).select();
+
+            expect(result.length).toEqual(3);
+            expect(result[0].Age).toEqual(14);
+            expect(result[2].Age).toEqual(57);
+            expect(result[0].Title).toEqual('');
+            expect(result[1].Title).toEqual('');
+            expect(result[2].Title).toEqual('Its a boy!');
         });
     });
 
@@ -171,6 +208,8 @@
             var result = jinqJs().from(people2).leftJoin(population, temps).on('Location').select();
 
             expect(result.length).toEqual(3);
+            expect(result[0].people).toEqual('');
+            expect(result[2].people).toEqual(123);
 
             result = jinqJs().from(result).where('Location == Islip').select();
             expect(result[0].temp).toEqual(85);
@@ -187,6 +226,11 @@
             var result = jinqJs().from(people2).leftJoin(sexType).on('Location', 'Sex').select();
 
             expect(result.length).toEqual(3);
+            expect(result[0].Age).toEqual(14);
+            expect(result[2].Age).toEqual(57);
+            expect(result[0].Title).toEqual('');
+            expect(result[1].Title).toEqual('');
+            expect(result[2].Title).toEqual('Its a boy!');
 
             result = jinqJs().from(result).where('Location == Islip').select();
             expect(result[0].Title).toEqual('Its a boy!');
@@ -194,6 +238,33 @@
             result = jinqJs().from(people2).leftJoin(sexType).on('Location', 'Sex').select();
             result = jinqJs().from(result).where('Location == Smithtown').select();
             expect(result[0].Title).toEqual('');
+        });
+    });
+
+    describe('.fullJoin()', function() {
+        it('Complex - Single Column', function() {
+            var result = jinqJs().from(people2).fullJoin(population).on('Location').select();            
+
+            expect(result.length).toEqual(4);
+            expect(result[0].people).toEqual('');
+            expect(result[0].Location).toEqual('Port Jeff');
+            expect(result[1].people).toEqual('');
+            expect(result[2].people).toEqual(123);
+            expect(result[2].Location).toEqual('Islip');
+            expect(result[3].people).toEqual(332);
+            expect(result[3].Location).toEqual('Melville');
+            expect(result[3].Name).toBeNull();
+        });
+
+        it('Complex - Multiple Columns', function() {
+            var result = jinqJs().from(people2).fullJoin(sexType).on('Sex', 'Location').select();            
+
+            expect(result.length).toEqual(4);
+            expect(result[0].Title).toEqual('');
+            expect(result[2].Title).toEqual('Its a boy!');
+            expect(result[3].Title).toEqual('Its a girl!');
+            expect(result[3].Location).toEqual('Islip');
+            expect(result[3].Name).toBeNull();
         });
     });
 
@@ -227,39 +298,48 @@
                 var result = jinqJs().from(people1).not().in(people2, 'Name').select();
 
                 expect(result.length).toEqual(2);
+                expect(result[0].Age).toEqual(30);
+                expect(result[1].Age).toEqual(11);
             });
 
             it('Complex - Complex to Complex (Multiple Columns)', function () {
                 var result = jinqJs().from(people1).not().in(people2, 'Name', 'Age').select();
 
                 expect(result.length).toEqual(3);
+                expect(result[0].Age).toEqual(29);
+                expect(result[1].Age).toEqual(30);
+                expect(result[2].Age).toEqual(11);
             });
 
             it('Complex - Complex to Simple (Single Column)', function () {
                 var result = jinqJs().from(people1).not().in(['Jen', 'Tom'], 'Name').select();
 
                 expect(result.length).toEqual(1);
+                expect(result[0].Name).toEqual('Diana');
             });
 
             it('Complex - Simple to Simple', function () {
                 var result = jinqJs().from([1, 2, 3, 4]).not().in([2, 3, 4, 5]).select();
 
                 expect(result.length).toEqual(1);
+                expect(result[0]).toEqual(1);
             });
         });
     });
 
     describe('.where()', function () {
         it('Complex - Multiple Simple Conditions', function () {
-            var result = jinqJs().from(people1).where('Age < 20', 'Sex = Male').select();
+            var result = jinqJs().from(people1).where('Age < 20', 'Sex === Male').select();
 
             expect(result.length).toEqual(1);
+            expect(result[0].Age).toEqual(14);
         });
 
         it('Complex - Predicate Using row & index', function () {
             var result = jinqJs().from(people1).where(function (row, index) { return index === 1 && row.Name === 'Jen'; }).select();
 
             expect(result.length).toEqual(1);
+            expect(result[0].Age).toEqual(30);
         });
 
         it('Simple - Predicate Using row & index', function () {
@@ -540,50 +620,51 @@
                 expect(result[4]).toEqual(5);
             });
         });
-
-        describe('.orderBy()', function () {
-            it('Complex - Multiple Columns Simple', function () {
-                var result = jinqJs().from(people1).orderBy('Name', 'Age').select();
-
-                expect(result[0].Name === 'Diana').toBeTruthy();
-                expect(result[2].Name === 'Tom' && result[2].Age === 14).toBeTruthy();
-            });
-
-            it('Complex - Multiple Columns Complex [field only]', function () {
-                var result = jinqJs().from(people1).orderBy([{field: 'Name'},{field: 'Age'}]).select();
-
-                expect(result[0].Name === 'Diana').toBeTruthy();
-                expect(result[2].Name === 'Tom' && result[2].Age === 14).toBeTruthy();
-            });
-
-            it('Complex - Multiple Columns Complex [field by name & sort]', function () {
-                var result = jinqJs().from(people1).orderBy([{ field: 'Name' }, { field: 'Age', sort: 'desc' }]).select();
-
-                expect(result[0].Name === 'Diana').toBeTruthy();
-                expect(result[2].Name === 'Tom' && result[2].Age === 29).toBeTruthy();
-            });
-
-            it('Complex - Multiple Columns Complex [field by positional # & sort]', function () {
-                var result = jinqJs().from(people1).orderBy([{ field: 0, sort: 'asc' }, { field: 1, sort: 'desc' }]).select();
-
-                expect(result[0].Name === 'Diana').toBeTruthy();
-                expect(result[2].Name === 'Tom' && result[2].Age === 29).toBeTruthy();
-            });
-
-            it('Simple - Ascending Numbers', function () {
-                var result = jinqJs().from([4,2,8,1,3]).orderBy([{sort: 'asc' }]).select();
-
-                expect(result[0] === 1 && result[4] === 8).toBeTruthy();
-            });
-
-            it('Simple - Descending String', function () {
-                var result = jinqJs().from(['Anna', 'Zillow', 'Mike']).orderBy([{ sort: 'desc' }]).select();
-
-                expect(result[0] === 'Zillow' && result[2] === 'Anna').toBeTruthy();
-            });
-        });
     });
 
+    describe('.orderBy()', function () {
+        
+        it('Complex - Multiple Columns Simple', function () {
+            var result = jinqJs().from(people1).orderBy('Name', 'Age').select();
+
+            expect(result[0].Name === 'Diana').toBeTruthy();
+            expect(result[2].Name === 'Tom' && result[2].Age === 14).toBeTruthy();
+        });
+
+        it('Complex - Multiple Columns Complex [field only]', function () {
+            var result = jinqJs().from(people1).orderBy([{field: 'Name'},{field: 'Age'}]).select();
+
+            expect(result[0].Name === 'Diana').toBeTruthy();
+            expect(result[2].Name === 'Tom' && result[2].Age === 14).toBeTruthy();
+        });
+
+        it('Complex - Multiple Columns Complex [field by name & sort]', function () {
+            var result = jinqJs().from(people1).orderBy([{ field: 'Name' }, { field: 'Age', sort: 'desc' }]).select();
+
+            expect(result[0].Name === 'Diana').toBeTruthy();
+            expect(result[2].Name === 'Tom' && result[2].Age === 29).toBeTruthy();
+        });
+
+        it('Complex - Multiple Columns Complex [field by positional # & sort]', function () {
+            var result = jinqJs().from(people1).orderBy([{ field: 0, sort: 'asc' }, { field: 1, sort: 'desc' }]).select();
+
+            expect(result[0].Name === 'Diana').toBeTruthy();
+            expect(result[2].Name === 'Tom' && result[2].Age === 29).toBeTruthy();
+        });
+
+        it('Simple - Ascending Numbers', function () {
+            var result = jinqJs().from([4,2,8,1,3]).orderBy([{sort: 'asc' }]).select();
+
+            expect(result[0] === 1 && result[4] === 8).toBeTruthy();
+        });
+
+        it('Simple - Descending String', function () {
+            var result = jinqJs().from(['Anna', 'Zillow', 'Mike']).orderBy([{ sort: 'desc' }]).select();
+
+            expect(result[0] === 'Zillow' && result[2] === 'Anna').toBeTruthy();
+        });
+    });
+    
     describe('.identity()', function () {
         it('Complex - No Column', function () {
             var result = jinqJs().from(people1, people2).identity().select();
@@ -627,6 +708,39 @@
             expect(result[7].ID).toEqual(8);
 
             jinqJs({ includeIdentity: false });
+        });
+    });
+
+    describe('.skip()', function () {
+        it('Complex - Fixed Number', function () {
+            var result = jinqJs().from(people1).skip(3).select();
+
+            expect(result.length).toEqual(1);
+            expect(result[0].Age).toEqual(11);
+
+        });
+
+        it('Complex - Percent', function () {
+            var result = jinqJs().from(people1).skip(.25).select();
+
+            expect(result.length).toEqual(3);
+            expect(result[0].Age).toEqual(30);
+            expect(result[2].Age).toEqual(11);
+        });
+
+        it('Simple - Fixed Number', function () {
+            var result = jinqJs().from(['Tom','Jen','Diana','Sandy']).skip(2).select();
+
+            expect(result.length).toEqual(2);
+            expect(result[0]).toEqual('Diana');
+            expect(result[1]).toEqual('Sandy');
+        });
+
+        it('Simple - Percent', function () {
+            var result = jinqJs().from(['Tom', 'Jen', 'Diana', 'Sandy']).skip(.75).select();
+
+            expect(result.length).toEqual(1);
+            expect(result[0]).toEqual('Sandy');
         });
     });
 
