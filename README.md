@@ -15,6 +15,11 @@ You can start using jinqJs by simply using the NuGet package manager.
  Install-Package jinqJs
  ```
 
+## Extensibility
+jinqJs has a simple plug-in architecture which allows you to simply add your own functions to the jinqJs library
+without modifying any of the base library code.
+View the online [documentation](https://onedrive.live.com/redir?resid=197F25F0703D2355!4722&authkey=!AKTubE9PRfruzj0&ithint=file%2cdocx) Extensibility section for more information.
+
 ## Examples
 **Joining Results With A Web Service Response And A Collection**
 ```JavaScript
@@ -26,14 +31,14 @@ var people = [{Name: 'Tom', Age: 15, Location: 'Port Jefferson'},
 var weatherSvc = 'http://api.openweathermap.org/data/2.5/weather?q=Huntington,NY';
 /* Sample use of a .select() predicate to flatten result */ 
 /* Calling a web service to query the response           */
-var weather = jinqJs()
+var weather = new jinqJs()
                 .from(weatherSvc)
                 .select( function(row){
                     return { Location: row.name, Condition: row.weather[0].description };
                 });
                     
 /* Performs a join on the web service response and local collection */
-var result = jinqJs()
+var result = new jinqJs()
                 .from(people)
                 .where( function(row) { return (row.Age > 3 && row.Location == 'Huntington'); } )
                 .leftJoin(weather).on('Location')
@@ -49,7 +54,7 @@ RESULT
 
 **Performing An Asynchronous Web Service Call**
 ```JavaScript
-jinqJs()
+new jinqJs()
     .from('http://www.telize.com/geoip',
         function(self) {
         var result = self
@@ -78,7 +83,7 @@ var population = [
               {Location: 'Melville', People: 332},
             ];
                                         
-var result = jinqJs()
+var result = new jinqJs()
     .from(people)
     .leftJoin(population)
       .on( function( left, right ) {
@@ -108,7 +113,7 @@ var people = [
               {Name: 'Tom', Age: 10, Location: 'Islip'}
             ];
                         
-var result = jinqJs()
+var result = new jinqJs()
     .from(people)
     .orderBy('Age')
     .select([{field: 'Name'}, 

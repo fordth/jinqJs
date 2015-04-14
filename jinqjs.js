@@ -49,24 +49,28 @@
  DATE:     4/3/15
  VESION:   .1.6
  NOTE:      Added index as 2nd parameter for .where() and .select()
-             Added .not(), .in()
+ Added .not(), .in()
 
  DATE:     4/4/15
  VERSION   1.00
  NOTE:     Added ability to do .distinct(), .max(),. min(), .avg() on simple arrays.
-             Added ability to union simple arrays.
-             .in() can except multiple columns to compare to.
-             If .orderBy() uses positional, then all fields ordered must be positional
-             Added support for .identity() on simple arrays. When on simple arrays the value gets set to a "Value" column by default.
-             Included unit tests
+ Added ability to union simple arrays.
+ .in() can except multiple columns to compare to.
+ If .orderBy() uses positional, then all fields ordered must be positional
+ Added support for .identity() on simple arrays. When on simple arrays the value gets set to a "Value" column by default.
+ Included unit tests
 
  DATE:     4/11/15
  VERSION   1.13
  NOTE:     Made various performance improvements.
-            Added new ability to perform Full Joins using .fullJoin() <-- Only String columns, no expressions
-            Added new function .skip().
-            Added support for strong type comparison === and !== in .where() when using expressions.
-            Fixed an issue with the .not().in() function not properly working when using multiple columns.
+ Added new ability to perform Full Joins using .fullJoin() <-- Only String columns, no expressions
+ Added new function .skip().
+ Added support for strong type comparison === and !== in .where() when using expressions.
+ Fixed an issue with the .not().in() function not properly working when using multiple columns.
+
+ DATE:     4/13/15
+ VERSION   1.2a
+ NOTE:     Added new function jinqJs.addPlugin() to allow extensibility. See API documentation.
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
@@ -88,7 +92,8 @@ var jinqJs = function (settings) {
             NotEqual: 6,
             NotEqualEqualType: 7,
             Contains: 8
-        };
+        },
+        storage = {};
 
     jinqJs.settings = jinqJs.settings || {};
 
@@ -462,7 +467,7 @@ var jinqJs = function (settings) {
 
                 //Next get the elements on the right that are not in the result
                 if (joinType === 'full') {
-                    var z = jinqJs().from(collections[index]).not().in(ret, comparers).select(convertToFieldArray(ret[0]));
+                    var z = new jinqJs().from(collections[index]).not().in(ret, comparers).select(convertToFieldArray(ret[0]));
                     ret = ret.concat(z);
                 }
 
@@ -1142,29 +1147,36 @@ var jinqJs = function (settings) {
             return this;
         };
 
-    return {
-        from: _from,
-        select: _select,
-        top: _top,
-        bottom: _bottom,
-        where: _where,
-        distinct: _distinct,
-        groupBy: _groupBy,
-        sum: _sum,
-        count: _count,
-        min: _min,
-        max: _max,
-        avg: _avg,
-        identity: _identity,
-        orderBy: _orderBy,
-        on: _on,
-        join: _join,
-        leftJoin: _leftJoin,
-        fullJoin: _fullJoin,
-        concat: _concat,
-        union: _union,
-        not: _not,
-        in: _in,
-        skip: _skip
+    //Globals
+    this.from = _from;
+    this.select = _select;
+    this.top = _top;
+    this.bottom = _bottom;
+    this.where = _where;
+    this.distinct = _distinct;
+    this.groupBy = _groupBy;
+    this.sum = _sum;
+    this.count = _count;
+    this.min = _min;
+    this.max = _max;
+    this.avg = _avg;
+    this.identity = _identity;
+    this.orderBy = _orderBy;
+    this.on = _on;
+    this.join = _join;
+    this.leftJoin = _leftJoin;
+    this.fullJoin = _fullJoin;
+    this.concat = _concat;
+    this.union = _union;
+    this.not = _not;
+    this.in = _in;
+    this.skip = _skip;
+    this._x = function(name, args, plugin){
+        storage[name] = storage[name] || {};
+        return plugin.call(this, result, args, storage[name]);
     };
+};
+
+jinqJs.addPlugin = function(name, plugin) {
+    jinqJs.prototype[name] = function() {return this._x(name, arguments, plugin);};
 };
