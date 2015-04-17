@@ -37,6 +37,13 @@
 
     var weatherSvc = 'http://api.openweathermap.org/data/2.5/weather?q=Port Jefferson,NY'
 
+    if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+        jinqJs = require('../jinqjs-unstable');
+        console.log('Testing node.js instance.');
+    }
+    else
+        console.log('Testing as client instance.');
+
     describe('.from()', function () {
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 

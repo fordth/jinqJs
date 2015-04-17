@@ -20,7 +20,7 @@
 
     /* Sample use of a .select() predicate to flatten result */ 
     /* Calling a web service to query the response           */
-    var weather = jinqJs()
+    var weather = new jinqJs()
                    .from(weatherSvc)
                    .select( function(row){
                       return { Location: row.name, Condition: row.weather[0].description };
@@ -28,7 +28,7 @@
 
     /* UNCOMMENT SECTIONS of the expression to see the results */
     /* Performs a join on the web service response and local collections */
-    $scope.data = jinqJs()
+    $scope.data = new jinqJs()
                     .from(people).on('Location')
                     .where( function(row) { return (row.Age > 3 && row.Location == 'Huntington'); } )
                     .leftJoin(weather).on('Location')

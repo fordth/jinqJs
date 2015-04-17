@@ -20,6 +20,17 @@ jinqJs has a simple plug-in architecture which allows you to simply add your own
 without modifying any of the base library code.
 View the online [documentation](https://onedrive.live.com/redir?resid=197F25F0703D2355!4722&authkey=!AKTubE9PRfruzj0&ithint=file%2cdocx) Extensibility section for more information.
 
+## Node.js
+As of version 1.3+ jinqJs is Node.js ready. 
+You install the jinq module by running:
+```
+npm install -g jinq
+```
+You load the jinqJs module in Node.js via the following:
+```JavaScript
+var jinqJs = require('jinq');
+```
+
 ## Examples
 **Joining Results With A Web Service Response And A Collection**
 ```JavaScript

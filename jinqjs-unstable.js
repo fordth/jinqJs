@@ -71,6 +71,10 @@
  DATE:     4/13/15
  VERSION   1.2a
  NOTE:     Added new function jinqJs.addPlugin() to allow extensibility. See API documentation.
+
+ DATE:     4/13/15
+ VERSION   1.3
+ NOTE:     Added module jinqJs to support node.js.
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
@@ -390,6 +394,10 @@ var jinqJs = function (settings) {
             return array;
         },
 
+        isNode = function() {
+            return (typeof module !== 'undefined' && typeof module.exports !== 'undefined');
+        },
+
         onFromJoin = function (joinType, comparers) {
             var row = null;
             var ret = [];
@@ -487,6 +495,71 @@ var jinqJs = function (settings) {
                 if (args[index].length > 0)             //Could be a url string here or an array here. Length is ok to use either way
                     collections.push(args[index]);
             }
+        },
+
+        nodeServiceCall = function(self, url, callback){
+            var http = require("http");
+
+            http.get(url, function(response){
+               var content = '';
+
+                response.on('data', function(data){ content += data; });
+                response.on('end', function() {
+                    var data = JSON.parse(content);
+                    var collection = null;
+
+                    if (isArray(data))
+                        collection = data;
+                    else
+                        collection = new Array(data);
+
+                    collections.push(collection);
+                    result = collection;
+
+                    if (isFunction(callback))
+                        callback(self);
+                });
+            });
+        },
+
+        browserServiceCall = function(self, url, callback){
+            var xmlhttp = new XMLHttpRequest();
+            var collection = null;
+
+            if (isFunction(callback)) {
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.response.length === 0)
+                        return;
+
+                    var response = JSON.parse(xmlhttp.response);
+
+                    if (isArray(response))
+                        collection = response;
+                    else
+                        collection = new Array(response);
+
+                    collections.push(collection);
+                    result = collection;
+
+                    callback(self);
+                };
+            }
+
+
+            xmlhttp.open("GET", url, isFunction(callback));
+            xmlhttp.send();
+
+            if (!isFunction(callback)) {
+
+                var response = JSON.parse(xmlhttp.response);
+
+                if (isArray(response))
+                    collection = response;
+                else
+                    collection = new Array(response);
+
+                collections.push(collection);
+            }
         };
 
     /* Exposed Methods (prefixed with _) */
@@ -516,44 +589,10 @@ var jinqJs = function (settings) {
                 }
 
                 if (isString(collection)) {
-                    var xmlhttp = new XMLHttpRequest();
-
-                    if (isFunction(callback)) {
-                        xmlhttp.self = this;
-
-                        xmlhttp.onreadystatechange = function () {
-                            if (xmlhttp.response.length === 0)
-                                return;
-
-                            var response = JSON.parse(xmlhttp.response);
-
-                            if (isArray(response))
-                                collection = response;
-                            else
-                                collection = new Array(response);
-
-                            collections.push(collection);
-                            result = collection;
-
-                            callback(this.self);
-                        };
-                    }
-
-
-                    xmlhttp.open("GET", collection, isFunction(callback));
-                    xmlhttp.send();
-
-                    if (!isFunction(callback)) {
-
-                        var response = JSON.parse(xmlhttp.response);
-
-                        if (isArray(response))
-                            collection = response;
-                        else
-                            collection = new Array(response);
-
-                        collections.push(collection);
-                    }
+                    if (!isNode())
+                        browserServiceCall(this, collection, callback);
+                    else
+                        nodeServiceCall(this, collection, callback);
                 }
                 else {
                     collections.push(collection);
@@ -1177,6 +1216,14 @@ var jinqJs = function (settings) {
     };
 };
 
-jinqJs.addPlugin = function(name, plugin) {
-    jinqJs.prototype[name] = function() {return this._x(name, arguments, plugin);};
-};
+(function() {
+    'use strict';
+
+    jinqJs.addPlugin = function(name, plugin) {
+        jinqJs.prototype[name] = function() {return this._x(name, arguments, plugin);};
+    };
+
+    //node.js
+    if (typeof module !== 'undefined' && typeof module.exports !== 'undefined')
+        module.exports = jinqJs;
+})();

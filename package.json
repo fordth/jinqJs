@@ -1,0 +1,31 @@
+{
+  "name": "jinq",
+  "version": "1.3.12-1",
+  "author": "Thomas Ford <thomas.ford@jinqjs.com>",
+  "description": "jinqJs provides you the ability to query javaScript arrays using SQL like syntaxes and LINQ like expressions.",
+  "keywords": [
+    "LINQ",
+    "query",
+    "SQL",
+    "array",
+    "lambda",
+    "jinqJs"
+  ],
+  "homepage": "http://www.jinqJs.com",
+  "bugs": {
+    "url": "https://github.com/fordth/jinqJs/issues",
+    "email": "thomas.ford@jinqjs.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fordth/jinqJs"
+  },
+  "main": "jinqJs.js",
+  "contributors": [
+    "Thomas Ford <thomas.ford@jinqjs.com>"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
