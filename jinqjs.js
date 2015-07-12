@@ -75,6 +75,11 @@
  DATE:     4/13/15
  VERSION   1.3
  NOTE:     Added module jinqJs to support node.js.
+
+ DATE:     7/12/15
+ VERSION   1.4
+ NOTE:     Added the ability to support a single parameter as an array of fields for the distinct().
+           Thank you to jinhduong for contributing and your recommendation.
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
@@ -501,7 +506,7 @@ var jinqJs = function (settings) {
             var http = require("http");
 
             http.get(url, function(response){
-                var content = '';
+               var content = '';
 
                 response.on('data', function(data){ content += data; });
                 response.on('end', function() {
@@ -857,11 +862,15 @@ var jinqJs = function (settings) {
                 }
             }
             else {
-                for (index = 0; index < len; index++) {
-                    row = condenseToFields(result[index], arguments);
-                    for (var fieldIndex = 0; fieldIndex < arguments.length; fieldIndex++) {
+                var argsDistinct = arguments;
+                if (Array.isArray(arguments[0]))
+                    argsDistinct = arguments[0];
 
-                        field = arguments[fieldIndex];
+                for (index = 0; index < len; index++) {
+                    row = condenseToFields(result[index], argsDistinct);
+                    for (var fieldIndex = 0; fieldIndex < argsDistinct.length; fieldIndex++) {
+
+                        field = argsDistinct[fieldIndex];
                         if (!arrayItemFieldValueExists(collection, field, row[field])) {
                             collection.push(row);
                             break;

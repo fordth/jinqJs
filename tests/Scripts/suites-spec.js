@@ -619,6 +619,15 @@
                 expect(result.length).toEqual(1);
             });
 
+            it('Complex - Array of Columns', function() {
+                var result = new jinqJs().from(people1).distinct( ['Name', 'Location'] ).select();
+
+                expect(result.length).toEqual(3);
+
+                result = new jinqJs().from(result).where('Name == Tom').select();
+                expect(result.length).toEqual(1);
+            });
+
             it('Simple', function () {
                 var result = new jinqJs().from([1,2,2,3,4,3,5]).distinct().select();
 
