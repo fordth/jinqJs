@@ -362,6 +362,13 @@
             expect(result.length).toEqual(2);
             expect(result[0].Name === 'Tom' && result[1].Name === 'Tom').toBeTruthy();
         });
+
+         it('Simple - Predicate Using row & index with the filter()', function () {
+            var result = new jinqJs().from([1,2,3,4,5,6]).filter(function (row, index) { return row % 2 === 0; }).select();
+
+            expect(result.length).toEqual(3);
+            expect(result[0]).toEqual(2);
+        });
     });
 
     describe('.groupBy()', function () {
@@ -950,5 +957,107 @@
             expect(result[3].Name).toEqual('Sample');
             expect(result[3].TimesCalled).toEqual(2);
         });
+    });
+
+    describe('.update().at()', function () {
+        it('Simple - In-Place Update .at() with no Parameters.', function () {
+            var data = JSON.parse(JSON.stringify(people1));
+
+            new jinqJs()
+                .from(data)
+                .update( function(row,index) { row.Location = 'Port Jeff Sta.';} )
+                    .at( );
+
+            expect(data.length).toEqual(4);
+            expect(data[0].Location).toEqual('Port Jeff Sta.');
+            expect(data[1].Location).toEqual('Port Jeff Sta.');
+            expect(data[2].Location).toEqual('Port Jeff Sta.');
+            expect(data[3].Location).toEqual('Port Jeff Sta.');
+        });
+
+        it('Simple - In-Place Update .at() with single string Parameter.', function () {
+            var data = JSON.parse(JSON.stringify(people1));
+
+            new jinqJs()   //Sample doing in-place update 
+            .from(data) 
+            .update( function(row){ row.Name = 'Thomas';} ) 
+              .at('Name = Tom');
+
+            expect(data.length).toEqual(4);
+            expect(data[0].Name).toEqual('Thomas');
+            expect(data[1].Name).toEqual('Jen');
+            expect(data[2].Name).toEqual('Thomas');
+        });
+
+        it('Simple - In-Place Update .at() with multiple string Parameters.', function () {
+            var data = JSON.parse(JSON.stringify(people1));
+
+            new jinqJs()   //Sample doing in-place update 
+            .from(data) 
+            .update( function(row){ row.Name = 'Thomas';} ) 
+              .at('Name = Tom', 'Age = 29');
+
+            expect(data.length).toEqual(4);
+            expect(data[0].Name).toEqual('Thomas');
+            expect(data[1].Name).toEqual('Jen');
+            expect(data[2].Name).toEqual('Tom');
+        });
+
+         it('Complex - Update with .at() predicate updating rows from a join returning results.', function () {
+            var result = new jinqJs()
+             .from(people1)
+             .join(sexType)
+                .on('Sex')
+             .where('Age < 30')
+             .update( function(row,index) { row.Name = 'Thomas';} )
+                .at( function(row,index) { return (index === 1 && row.Age === 14); } )
+             .select();
+
+            expect(result.length).toEqual(3);
+            expect(result[0].Name).toEqual('Tom');
+            expect(result[1].Name).toEqual('Thomas');
+            expect(result[2].Name).toEqual('Diana');
+        });
+
+        it('Expected exception calling .update().delete()', function () {
+            var jinq = new jinqJs()
+                 .from(people1)
+                 .join(sexType)
+                    .on('Sex')
+                 .where('Age < 30')
+                 .delete();
+
+            expect( function() {jinq.update( function(row,index) { row.Name = 'Thomas';}) ;}).toThrow('A pending delete operation exists!');
+        });
+    });
+
+    describe('.delete().at()', function () {
+            it('Complex - with .at() with a single parameter.', function () {
+                var result = new jinqJs()
+                     .from(people1)
+                     .join(sexType)
+                        .on('Sex')
+                     .where('Age < 30')
+                     .update( function(row,index) { row.Name = 'Thomas';} )
+                        .at( function(row,index) { return (index === 1 && row.Age === 14); } )
+                     .delete()
+                        .at('Age = 11')
+                     .select();
+
+                expect(result.length).toEqual(2);
+                expect(result[0].Age).toEqual(29);
+                expect(result[1].Age).toEqual(14);
+            });
+
+            it('Expected exception calling .delete().update()', function () {
+                var jinq = new jinqJs()
+                     .from(people1)
+                     .join(sexType)
+                        .on('Sex')
+                     .where('Age < 30')
+                     .update( function(row,index) { row.Name = 'Thomas';});
+
+                expect( function() {jinq.delete();}).toThrow('A pending update operation exists!');
+            });
     });
 });

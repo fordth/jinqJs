@@ -23,6 +23,7 @@
 
  AUTHOR: Thomas Ford
  DATE:   3/21/2015
+         http://jinqJs.com
 
  ------------------------------------------------------------------------------------------
  DATE:     3/23/15
@@ -80,6 +81,19 @@
  VERSION   1.4
  NOTE:     Added the ability to support a single parameter as an array of fields for the distinct().
            Thank you to jinhduong for contributing and your recommendation.
+           
+ DATE:     8/1/15
+ VERSION:  1.5
+ NOTE:     .Did some code refactoring for getExpression() and isTruthy() functions.
+           .Added new function filter(), filter() function is synonymous to the where() function.
+              The filter() is just a refernce to the where() and can be used interchangeably.
+           .Added ability to now update rows inside an array. The update does an in-place update 
+              (Referencing the original array), it is not necessary to execute the select() when only
+              performing an update on the array. New functions update() and at() have been added.
+              
+ DATE:     8/3/15
+ VERSION:  1.5.1
+ NOTE:     Added .delete() for deleting records when the .at() is true.
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
@@ -91,6 +105,8 @@ var jinqJs = function (settings) {
         groups = [],
         notted = false,
         identityUsed = false,
+        delegateUpdate = null,
+        deleteFlag = false,
         operators = {
             LessThen: 0,
             LessThenEqual: 1,
@@ -565,6 +581,60 @@ var jinqJs = function (settings) {
 
                 collections.push(collection);
             }
+        },
+        
+        getExpressions = function(args){
+          var argLen = args.length;
+          var expr = new Array(argLen);
+          
+          for (var eIndex = 0; eIndex < argLen; eIndex++) {
+              var matches = args[eIndex].split(' ');
+
+              if (matches.length !== 3)
+                  throw ('Invalid expression!');
+
+              expr[eIndex] = {
+                  lField: matches[0],
+                  operator: convertToOperatorEnum(matches[1]),
+                  rValue: matches[2]
+              };
+          }
+          
+          return expr;
+        },
+        
+        isTruthy = function(row, expr){
+          switch (expr.operator) {
+            case operators.EqualEqualType:
+                return (row[expr.lField] === expr.rValue);
+
+            case operators.NotEqualEqualType:
+                return (row[expr.lField] !== expr.rValue);
+
+            case operators.LessThen:
+                return (row[expr.lField] < expr.rValue);
+
+            case operators.GreaterThen:
+                return (row[expr.lField] > expr.rValue);
+
+            case operators.NotEqual:
+                return (row[expr.lField] != expr.rValue);
+
+            case operators.Equal:
+                return (row[expr.lField] == expr.rValue);
+
+            case operators.LessThenEqual:
+                return (row[expr.lField] <= expr.rValue);
+
+            case operators.GreaterThenEqual:
+                return (row[expr.lField] >= expr.rValue);
+
+            case operators.Contains:
+                return (row[expr.lField].indexOf(expr.rValue) > -1);
+
+            default:
+                return false;
+          }
         };
 
     /* Exposed Methods (prefixed with _) */
@@ -697,6 +767,82 @@ var jinqJs = function (settings) {
             return collection;
         },
 
+        _update = function(predicate) {
+          if (deleteFlag)
+            throw ('A pending delete operation exists!');
+          
+          if (typeof predicate === 'undefined' || !isFunction(predicate))
+            return this;
+
+          delegateUpdate = predicate;
+
+          return this;     
+        },
+        
+        _delete = function() {
+          if (delegateUpdate !== null)
+            throw ('A pending update operation exists!');
+          
+          deleteFlag = true;
+          
+          return this;
+        },
+        
+        _at = function() {
+          var resLen = result.length;
+          var expr = null;
+          var isPredicateFunc = false;
+          var isTruthfull = false;
+          var argLen = arguments.length;
+          
+          
+          if ( (delegateUpdate === null && !deleteFlag) || resLen === 0)
+            return this;
+          
+          if (argLen > 0){
+            isPredicateFunc = isFunction(arguments[0]);
+            if (!isPredicateFunc) {
+                expr = getExpressions(arguments);
+            } 
+          }
+            
+          for (var index = resLen-1; index > -1; index--) {
+            if (isPredicateFunc) {
+              if (arguments[0](result[index], index)) {
+                if (deleteFlag)
+                  result.splice(index,1);
+                else
+                  delegateUpdate(result[index], index); 
+              }
+            }
+            else if (argLen === 0) {
+              if (deleteFlag)
+                result.splice(index,1);
+              else
+                delegateUpdate(result[index], index); 
+            } else {
+              for (var arg = 0; arg < argLen; arg++) {
+                  isTruthfull = isTruthy(result[index], expr[arg]);
+
+                  if (!isTruthfull)
+                      break;
+              }
+
+              if (isTruthfull) {
+                  if (deleteFlag)
+                    result.splice(index,1);
+                  else
+                    delegateUpdate(result[index], index); 
+              }
+            }
+          }       
+            
+          delegateUpdate = null;
+          deleteFlag = false;
+          
+          return this;
+        },
+
         _concat = function () {
             collections.func = null;
 
@@ -734,10 +880,10 @@ var jinqJs = function (settings) {
         _where = function (predicate) {
             var collection = [];
             var isPredicateFunc = false;
-            var isTruthy = false;
+            var isTruthfull = false;
             var argLen = arguments.length;
             var resLen = result.length;
-            var expr = new Array(argLen);
+            var expr = null;
             var row = null;
 
             if (typeof predicate === 'undefined')
@@ -746,18 +892,7 @@ var jinqJs = function (settings) {
             isPredicateFunc = isFunction(predicate);
 
             if (!isPredicateFunc) {
-                for (var eIndex = 0; eIndex < argLen; eIndex++) {
-                    var matches = arguments[eIndex].split(' ');
-
-                    if (matches.length !== 3)
-                        throw ('Invalid expression!');
-
-                    expr[eIndex] = {
-                        lField: matches[0],
-                        operator: convertToOperatorEnum(matches[1]),
-                        rValue: matches[2]
-                    };
-                }
+                expr = getExpressions(arguments);
             }
 
             for (var index = 0; index < resLen; index++) {
@@ -769,54 +904,14 @@ var jinqJs = function (settings) {
                 }
                 else {
                     for (var arg = 0; arg < argLen; arg++) {
-                        switch (expr[arg].operator) {
-                            case operators.EqualEqualType:
-                                isTruthy = (row[expr[arg].lField] === expr[arg].rValue);
-                                break;
+                        isTruthfull = isTruthy(row, expr[arg]);
 
-                            case operators.NotEqualEqualType:
-                                isTruthy = (row[expr[arg].lField] !== expr[arg].rValue);
-                                break;
-
-                            case operators.LessThen:
-                                isTruthy = (row[expr[arg].lField] < expr[arg].rValue);
-                                break;
-
-                            case operators.GreaterThen:
-                                isTruthy = (row[expr[arg].lField] > expr[arg].rValue);
-                                break;
-
-                            case operators.NotEqual:
-                                isTruthy = (row[expr[arg].lField] != expr[arg].rValue);
-                                break;
-
-                            case operators.Equal:
-                                isTruthy = (row[expr[arg].lField] == expr[arg].rValue);
-                                break;
-
-                            case operators.LessThenEqual:
-                                isTruthy = (row[expr[arg].lField] <= expr[arg].rValue);
-                                break;
-
-                            case operators.GreaterThenEqual:
-                                isTruthy = (row[expr[arg].lField] >= expr[arg].rValue);
-                                break;
-
-                            case operators.Contains:
-                                isTruthy = (row[expr[arg].lField].indexOf(expr[arg].rValue) > -1);
-                                break;
-
-                            default:
-                                isTruthy = false;
-                        }
-
-                        if (!isTruthy)
+                        if (!isTruthfull)
                             break;
                     }
 
-                    if (isTruthy)
+                    if (isTruthfull)
                         collection.push(row);
-
                 }
             }
 
@@ -1198,6 +1293,7 @@ var jinqJs = function (settings) {
     //Globals
     this.from = _from;
     this.select = _select;
+    this.update = _update;
     this.top = _top;
     this.bottom = _bottom;
     this.where = _where;
@@ -1219,6 +1315,9 @@ var jinqJs = function (settings) {
     this.not = _not;
     this.in = _in;
     this.skip = _skip;
+    this.filter = _where;
+    this.at = _at;
+    this.delete = _delete;
     this._x = function(name, args, plugin){
         storage[name] = storage[name] || {};
         return plugin.call(this, result, args, storage[name]);

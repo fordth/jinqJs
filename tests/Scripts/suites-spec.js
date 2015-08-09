@@ -362,6 +362,13 @@
             expect(result.length).toEqual(2);
             expect(result[0].Name === 'Tom' && result[1].Name === 'Tom').toBeTruthy();
         });
+
+        it('Simple - Predicate Using row & index with the filter()', function () {
+            var result = new jinqJs().from([1,2,3,4,5,6]).filter(function (row, index) { return row % 2 === 0; }).select();
+
+            expect(result.length).toEqual(3);
+            expect(result[0]).toEqual(2);
+        });
     });
 
     describe('.groupBy()', function () {

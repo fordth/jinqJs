@@ -1,5 +1,5 @@
 # jinqJs
-jinqJs provides a simple, leightweight & fast way to perform SQL like queries on javaScript arrays, collections and web services using LINQ expressions.
+jinqJs provides a simple, leightweight & fast way to perform queries, updates and deletes on javaScript arrays, collections and web services using LINQ expressions.
 You can visit the [jinqJs.com](http://www.jinqJs.com) for more examples and demos.
 
 
@@ -30,6 +30,9 @@ You load the jinqJs module in Node.js via the following:
 ```JavaScript
 var jinqJs = require('jinq');
 ```
+
+## Perform RUD Operations
+Starting in version 1.5.1 you can perform update and delete operations. 
 
 ## Examples
 **Joining Results With A Web Service Response And A Collection**
