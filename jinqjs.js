@@ -94,6 +94,12 @@
  DATE:     8/3/15
  VERSION:  1.5.1
  NOTE:     Added .delete() for deleting records when the .at() is true.
+
+ DATE:     8/12/15
+ VERSION:  1.5.2
+ NOTE:     Changed the .at() and .update() predicates first parameter not to be a row object, but the array instead.
+           The two parameters passed to the delegate are now (collection, index). This was changed due to an issue when trying to
+           update simple arrays i.e. [1,2,3,4,5], since they are not object types they were not getting updated.
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
@@ -808,18 +814,18 @@ var jinqJs = function (settings) {
             
           for (var index = resLen-1; index > -1; index--) {
             if (isPredicateFunc) {
-              if (arguments[0](result[index], index)) {
+              if (arguments[0](result, index)) {
                 if (deleteFlag)
                   result.splice(index,1);
                 else
-                  delegateUpdate(result[index], index); 
+                  delegateUpdate(result, index); 
               }
             }
             else if (argLen === 0) {
               if (deleteFlag)
                 result.splice(index,1);
               else
-                delegateUpdate(result[index], index); 
+                delegateUpdate(result, index); 
             } else {
               for (var arg = 0; arg < argLen; arg++) {
                   isTruthfull = isTruthy(result[index], expr[arg]);
@@ -832,7 +838,7 @@ var jinqJs = function (settings) {
                   if (deleteFlag)
                     result.splice(index,1);
                   else
-                    delegateUpdate(result[index], index); 
+                    delegateUpdate(result, index); 
               }
             }
           }       

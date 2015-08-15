@@ -965,7 +965,7 @@
 
             new jinqJs()
                 .from(data)
-                .update( function(row,index) { row.Location = 'Port Jeff Sta.';} )
+                .update( function(coll,index) { coll[index].Location = 'Port Jeff Sta.';} )
                     .at( );
 
             expect(data.length).toEqual(4);
@@ -975,12 +975,31 @@
             expect(data[3].Location).toEqual('Port Jeff Sta.');
         });
 
+        it('Simple - Upate/Delete primitive types.', function () {
+            var simple = [3,5,4,1,2,8,4];
+
+            var data = new jinqJs()
+                    .from(simple)
+                    .distinct()
+                    .delete()
+                        .at( function(coll, index) { return coll[index] <= 3;} )
+                    .orderBy([{sort: 'asc'}])
+                    .update( function(coll, index){ coll[index] = coll[index] + 100;} )
+                        .at( function(coll, index) { return index % 2 === 0; } )
+                    .select();
+
+            expect(data.length).toEqual(3);
+            expect(data[0]).toEqual(104);
+            expect(data[1]).toEqual(5);
+            expect(data[2]).toEqual(108);
+        });        
+
         it('Simple - In-Place Update .at() with single string Parameter.', function () {
             var data = JSON.parse(JSON.stringify(people1));
 
             new jinqJs()   //Sample doing in-place update 
             .from(data) 
-            .update( function(row){ row.Name = 'Thomas';} ) 
+            .update( function(coll,index){ coll[index].Name = 'Thomas';} ) 
               .at('Name = Tom');
 
             expect(data.length).toEqual(4);
@@ -994,7 +1013,7 @@
 
             new jinqJs()   //Sample doing in-place update 
             .from(data) 
-            .update( function(row){ row.Name = 'Thomas';} ) 
+            .update( function(coll,index){ coll[index].Name = 'Thomas';} ) 
               .at('Name = Tom', 'Age = 29');
 
             expect(data.length).toEqual(4);
@@ -1009,8 +1028,8 @@
              .join(sexType)
                 .on('Sex')
              .where('Age < 30')
-             .update( function(row,index) { row.Name = 'Thomas';} )
-                .at( function(row,index) { return (index === 1 && row.Age === 14); } )
+             .update( function(coll,index) { coll[index].Name = 'Thomas';} )
+                .at( function(coll,index) { return (index === 1 && coll[index].Age === 14); } )
              .select();
 
             expect(result.length).toEqual(3);
@@ -1027,7 +1046,7 @@
                  .where('Age < 30')
                  .delete();
 
-            expect( function() {jinq.update( function(row,index) { row.Name = 'Thomas';}) ;}).toThrow('A pending delete operation exists!');
+            expect( function() {jinq.update( function(coll,index) { coll[index].Name = 'Thomas';}) ;}).toThrow('A pending delete operation exists!');
         });
     });
 
@@ -1038,8 +1057,8 @@
                      .join(sexType)
                         .on('Sex')
                      .where('Age < 30')
-                     .update( function(row,index) { row.Name = 'Thomas';} )
-                        .at( function(row,index) { return (index === 1 && row.Age === 14); } )
+                     .update( function(coll,index) { coll[index].Name = 'Thomas';} )
+                        .at( function(coll,index) { return (index === 1 && coll[index].Age === 14); } )
                      .delete()
                         .at('Age = 11')
                      .select();
