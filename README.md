@@ -3,6 +3,9 @@ jinqJs provides a simple, leightweight & fast way to perform queries, updates an
 You can visit the [jinqJs.com](http://www.jinqJs.com) for more examples and demos.
 
 
+## TypeScript Support
+Include the definition file jinqJs.d.ts
+
 ## Unit Tested
 All stable versions have had a 100% success rate with all 80+ unit tests.
 
@@ -14,6 +17,16 @@ You can start using jinqJs by simply using the NuGet package manager.
  ```
  Install-Package jinqJs
  ```
+ 
+## Installing the jinq module by running:
+```
+npm install -g jinq
+```
+
+## Installing jinqJs via Bower
+```
+bower install jinqjs
+```
 
 ## Extensibility
 jinqJs has a simple plug-in architecture which allows you to simply add your own functions to the jinqJs library
@@ -21,12 +34,7 @@ without modifying any of the base library code.
 View the online [documentation](https://onedrive.live.com/redir?resid=197F25F0703D2355!4722&authkey=!AKTubE9PRfruzj0&ithint=file%2cdocx) Extensibility section for more information.
 
 ## Node.js
-As of version 1.3+ jinqJs is Node.js ready. 
-You install the jinq module by running:
-```
-npm install -g jinq
-```
-You load the jinqJs module in Node.js via the following:
+As of version 1.3+ jinqJs is Node.js ready. You load the jinqJs module in Node.js via the following:
 ```JavaScript
 var jinqJs = require('jinq');
 ```
