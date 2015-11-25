@@ -1,6 +1,6 @@
 {
   "name": "jinq",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "author": "Thomas Ford <tomspostoffice@yahoo.com>",
   "description": "jinqJs provides you the ability to query, update and delete javaScript arrays using SQL like syntaxes and LINQ like expressions.",
   "keywords": [
@@ -17,6 +17,7 @@
     "email": "tomspostoffice@yahoo.com"
   },
   "license": "MIT",
+  "typescript": { "definition": "jinqJs.d.ts" },
   "repository": {
     "type": "git",
     "url": "https://github.com/fordth/jinqJs"
