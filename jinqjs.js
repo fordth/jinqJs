@@ -100,6 +100,10 @@
  NOTE:     Changed the .at() and .update() predicates first parameter not to be a row object, but the array instead.
            The two parameters passed to the delegate are now (collection, index). This was changed due to an issue when trying to
            update simple arrays i.e. [1,2,3,4,5], since they are not object types they were not getting updated.
+
+ DATE:     11/24/15
+ VERSION:  1.5.3
+ NOTE:     Added support for TYpeScript definition file.
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
