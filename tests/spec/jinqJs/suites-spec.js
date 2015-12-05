@@ -342,6 +342,13 @@
             expect(result[0].Age).toEqual(14);
         });
 
+        it('Complex - Multiple Simple Conditions With Spaces', function () {
+            var result = new jinqJs().from(people1).where('Age < 20', 'Location === Port Jeff').select();
+
+            expect(result.length).toEqual(2);
+            expect(result[0].Age).toEqual(14);
+        });
+
         it('Complex - Predicate Using row & index', function () {
             var result = new jinqJs().from(people1).where(function (row, index) { return index === 1 && row.Name === 'Jen'; }).select();
 

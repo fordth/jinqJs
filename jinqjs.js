@@ -104,6 +104,14 @@
  DATE:     11/24/15
  VERSION:  1.5.3
  NOTE:     Added support for TYpeScript definition file.
+
+ DATE:     11/24/15
+ VERSION:  1.5.3
+ NOTE:     Added support for TYpeScript definition file.
+
+ DATE:     12/5/15
+ VERSION:  1.5.6
+ NOTE:     Fixed bug when R-Value of an expression contained spaces.
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
@@ -594,19 +602,20 @@ var jinqJs = function (settings) {
         },
         
         getExpressions = function(args){
+          var regExpr = /([^\s]+)\s(<|>|!=|!==|=|==|===|<=|>=|\*)\s(.+)/;
           var argLen = args.length;
           var expr = new Array(argLen);
           
           for (var eIndex = 0; eIndex < argLen; eIndex++) {
-              var matches = args[eIndex].split(' ');
+              var matches = args[eIndex].match(regExpr);
 
-              if (matches.length !== 3)
+              if (matches.length !== 4)
                   throw ('Invalid expression!');
 
               expr[eIndex] = {
-                  lField: matches[0],
-                  operator: convertToOperatorEnum(matches[1]),
-                  rValue: matches[2]
+                  lField: matches[1],
+                  operator: convertToOperatorEnum(matches[2]),
+                  rValue: matches[3]
               };
           }
           
