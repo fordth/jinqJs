@@ -172,7 +172,7 @@ jinqJs/
 ```
 
 ## Bugs and Feature Requests
-For comments, bugs or feature requests you can email me at [thomas.ford@jinqjs.com](mailto:thomas.ford@jinqjs.com).
+For comments, bugs or feature requests you can email me at [tomspostoffice@yahoo.com](mailto:tomspostoffice@yahoo.com).
 You can also open an issue at [New Issue](https://github.com/fordth/jinqJs/issues).
 
 ## Copyright and License
