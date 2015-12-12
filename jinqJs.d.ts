@@ -29,12 +29,7 @@ declare module jinqJsSafe {
         not(): jinqJs;
         in<T>(collect: Collection<T>, ...fields: string[]): jinqJs;
 
-        groupBy(field: string, ...fields: string[]): jinqJs;
-        sum(...fields: string[]): jinqJs;
-        count(...fields: string[]): jinqJs;
-        avg(...fields: string[]): jinqJs;
-        min(...fields: string[]): jinqJs;
-        max(...fields: string[]): jinqJs;
+        groupBy(field: string, ...fields: string[]): IAggregate;
 
         distinct(...fields: string[]): jinqJs;
         distinct(fields: string[]): jinqJs;
@@ -59,6 +54,13 @@ declare module jinqJsSafe {
         at<T>(predicate: PredicateCollection<T>): jinqJs;
     }
 
+    export interface IAggregate {
+        sum(...fields: string[]): jinqJs;
+        count(...fields: string[]): jinqJs;
+        avg(...fields: string[]): jinqJs;
+        min(...fields: string[]): jinqJs;
+        max(...fields: string[]): jinqJs;
+    }
 
     export interface jinqJsSettings {
         includeIdentity: boolean;
