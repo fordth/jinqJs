@@ -10,7 +10,7 @@ Include the definition file jinqJs.d.ts
 All stable versions have had a 100% success rate with all 80+ unit tests.
 
 ## Online Detailed API Documentation With Examples of Every Function
-The full API documentation can be found [here](https://jinqjs.readme.io/)
+The full API documentation can be found [here](http://bit.ly/jinqJsAPI)
 
 ## Installing via the NuGet Package
 You can start using jinqJs by simply using the NuGet package manager.
@@ -31,7 +31,7 @@ bower install jinqjs
 ## Extensibility
 jinqJs has a simple plug-in architecture which allows you to simply add your own functions to the jinqJs library
 without modifying any of the base library code.
-View the online [documentation](https://jinqjs.readme.io/docs/extensibility) Extensibility section for more information.
+View the online [documentation](http://bit.ly/jinqJsAPI-Extensibility) Extensibility section for more information.
 
 ## Node.js
 As of version 1.3+ jinqJs is Node.js ready. You load the jinqJs module in Node.js via the following:
