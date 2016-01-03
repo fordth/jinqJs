@@ -39,6 +39,14 @@ As of version 1.3+ jinqJs is Node.js ready. You load the jinqJs module in Node.j
 var jinqJs = require('jinq');
 ```
 
+## Angular 1.x Service
+If angular 1.x is loaded then jinqJs is available as a service in the module 'angular-jinqjs':
+```JavaScript
+angular.module('app', ['angular-jinqjs']).controller('demoCtrl', ['$jinqJs', function ($jinqJs) { 
+    var result = $jinqJs.from(data).select();
+}]);
+```
+
 ## Perform RUD Operations
 Starting in version 1.5.1 you can perform update and delete operations. 
 

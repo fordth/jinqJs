@@ -112,10 +112,6 @@
  DATE:     12/5/15
  VERSION:  1.5.6
  NOTE:     Fixed bug when R-Value of an expression contained spaces.
-
- DATE:     1/3/16
- VERSION:  1.5.9
- NOTE:     Added jinqJs service for Angular 1.x
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
@@ -1357,8 +1353,4 @@ var jinqJs = function (settings) {
     //node.js
     if (typeof module !== 'undefined' && typeof module.exports !== 'undefined')
         module.exports = jinqJs;
-
-    if (typeof angular !== 'undefined'){
-        angular.module('angular-jinqjs', []).service('$jinqJs', function() {return new jinqJs(); });
-    }
 })();

@@ -1086,4 +1086,28 @@
                 expect( function() {jinq.delete();}).toThrow('A pending update operation exists!');
             });
     });
+
+    describe('angular service', function() {
+        var service;
+
+        beforeEach(module('angular-jinqjs'), function() {});
+
+        beforeEach(inject( function(_$jinqJs_) {
+            service = _$jinqJs_;
+        }));
+
+        it('should have $jinqJs service be defined', function () {
+            expect(service).toBeDefined();
+        });
+
+        it('$jinqJs service', function() {
+            var result  = service
+                            .from(people2)
+                            .select();
+
+
+            expect(result.length).toEqual(3);
+            expect(result[0].Name).toEqual('Tom');
+        });
+    });
 });

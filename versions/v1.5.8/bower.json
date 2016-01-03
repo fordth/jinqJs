@@ -1,0 +1,30 @@
+{
+  "name": "jinqJs",
+  "description": "jinqJs provides you the ability to query, update and delete javaScript arrays using SQL like syntaxes and LINQ like expressions.",
+  "main": ["jinqJs.js", "jinqJs.d.ts"], 
+  "authors": [
+    "Thomas Ford <tomspostoffice@yahoo.com>"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "LINQ",
+    "query",
+    "SQL",
+    "array",
+    "lambda",
+    "jinqJs"
+  ],
+  "moduleType": ["node"],
+  "homepage": "http://jinqJs.com",
+  "repository": {
+  	"type": "git",
+  	"url": "https://github.com/fordth/jinqJs.git"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
