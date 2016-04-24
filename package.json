@@ -22,7 +22,7 @@
     "type": "git",
     "url": "https://github.com/fordth/jinqJs"
   },
-  "main": "jinqJs.js",
+  "main": "jinqjs.js",
   "contributors": [
     "Thomas Ford <tomspostoffice@yahoo.com>"
   ],
