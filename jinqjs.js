@@ -116,6 +116,11 @@
  DATE:     1/3/16
  VERSION:  1.5.9
  NOTE:     Added jinqJs service for Angular 1.x
+
+ DATE:     5/14/16
+ VERSION:  1.6.0
+ NOTE:     Thanks to gpminsuk for recommending a change to isObject() you can now perform a select on an array that contains arrays.
+           For example: .from([[1,2,3],[4,5,6]]).select(2)  Will return the second element of each of the arrays in the root array.
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
@@ -165,7 +170,7 @@ var jinqJs = function (settings) {
         },
 
         isObject = function (obj) {
-            return (obj !== null && obj.constructor === Object);
+            return (obj !== null && (obj.constructor === Object || isArray(obj)));
         },
 
         isString = function (str) {
