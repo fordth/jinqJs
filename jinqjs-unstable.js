@@ -795,7 +795,7 @@ var jinqJs = function (settings) {
                             else
                                 obj[dstFieldName] = fields[field].value;
                         } else {
-                            obj[dstFieldName] = (isSimple ? result[index] : (result[index][srcFieldName] || null) );
+                            obj[dstFieldName] = (isSimple ? result[index][srcFieldName] : (result[index][srcFieldName] || null) );
                         }
                     }
 
