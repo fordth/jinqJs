@@ -316,34 +316,43 @@ var jinqJs = function (settings) {
                 isNumField = (field !== null && !isNaN(field) ? true : false);
 
                 result.sort(function (first, second) {
-                        if (isNumField) {
-                            firstField = Object.keys(first)[field];
-                            secondField = Object.keys(second)[field];
+                    if (isNumField) {
+                        firstField = Object.keys(first)[field];
+                        secondField = Object.keys(second)[field];
 
-                            if (prior !== null) {
-                                priorFirstField = Object.keys(first)[prior.field];
-                                priorSecondField = Object.keys(second)[prior.field];
-                            }
+                        if (prior !== null) {
+                            priorFirstField = Object.keys(first)[prior.field];
+                            priorSecondField = Object.keys(second)[prior.field];
                         }
-                        else {
-                            firstField = secondField = field;
-
-                            if (prior !== null)
-                                priorFirstField = priorSecondField = prior.field;
-                        }
-
-                        lValue = (field === null ? first : (isNaN(first[firstField]) ? first[firstField] : Number(first[firstField])));
-                        rValue = (field === null ? second : (isNaN(second[secondField]) ? second[secondField] : Number(second[secondField])));
-
-                        if (lValue < rValue && (prior === null || (field === null || first[priorFirstField] == second[priorSecondField])))
-                            return -1 * order;
-
-                        if (lValue > rValue && (prior === null || (field === null || first[priorFirstField] == second[priorSecondField])))
-                            return 1 * order;
-
-                        return 0;
                     }
-                );
+                    else {
+                        firstField = secondField = field;
+
+                        if (prior !== null)
+                            priorFirstField = priorSecondField = prior.field;
+                    }
+
+                    lValue = (field === null ? first : (isNaN(first[firstField]) ? first[firstField] : Number(first[firstField])));
+                    rValue = (field === null ? second : (isNaN(second[secondField]) ? second[secondField] : Number(second[secondField])));
+
+                    var compareResult = null;
+
+                    if (typeof lValue === "string") {
+                        try {
+                            compareResult = lValue.localeCompare(rValue);
+                        }
+                        catch (e) {
+                        }
+                    }
+
+                    if (compareResult === null) {
+                        compareResult = lValue < rValue ? -1 : lValue > rValue ? 1 : 0;
+                    }
+
+                    return compareResult !== 0 && (prior === null || (field === null || first[priorFirstField] == second[priorSecondField]))
+                        ? compareResult * order
+                        : 0;
+                });
             }
         },
 
@@ -1183,6 +1192,12 @@ var jinqJs = function (settings) {
             result.sort(function (first, second) {
                 var firstFields = JSON.stringify(condenseToFields(first, fields));
                 var secondFields = JSON.stringify(condenseToFields(second, fields));
+
+                try {
+                    return firstFields.localeCompare(secondFields);
+                }
+                catch (e) {
+                }
 
                 if (firstFields < secondFields)
                     return -1;
