@@ -1058,6 +1058,29 @@
     });
 
     describe('.delete().at()', function () {
+            //Fix for bug 1.6.1 when a collection had a 0, a null was returned
+            it('Check that internal collections are cleared.', function() {
+                var result = new jinqJs()
+                                .from(people1)
+                                .select();
+
+                expect(result.length).toEqual(4);
+
+                new jinqJs().delete().at();
+
+                result = new jinqJs()
+                                .from([])
+                                .select();                
+
+                expect(result.length).toEqual(0);
+
+                result = new jinqJs()
+                                .from(people2)
+                                .select();                
+
+                expect(result.length).toEqual(3);
+            });
+
             it('Complex - with .at() with a single parameter.', function () {
                 var result = new jinqJs()
                      .from(people1)

@@ -121,6 +121,14 @@
  VERSION:  1.6.0
  NOTE:     Thanks to gpminsuk for recommending a change to isObject() you can now perform a select on an array that contains arrays.
            For example: .from([[1,2,3],[4,5,6]]).select(2)  Will return the second element of each of the arrays in the root array.
+
+ DATE      9/18/16
+ VERSION:  1.6.1
+           Thanks to gpminsuk for finding an issue when a propery in a collection had a 0 value, a null was returned! See Issue #16
+           Thanks to pascalberge, moved the jinqJs definition file to scripts\typings\jinqJs.
+           Thanks to pemn, for finding if a collection has been added using a from() and then later .delete().at() is called with no parameters,
+                the internal variable collections is not being cleared.
+           Thanks to ninety7 for suggesting using string.localeCompare() for ordering.
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
@@ -178,11 +186,11 @@ var jinqJs = function (settings) {
         },
 
         hasProperty = function (obj, property) {
-            return obj[property] !== undefined; //(typeof obj[property] !== 'undefined'); //((obj[property] || null) !== null);
+            return obj[property] !== undefined;
         },
 
         isFunction = function (func) {
-            return (typeof func === 'function'); //(func !== null && func.constructor === Function);
+            return (typeof func === 'function'); 
         },
 
         isNumber = function (value) {
@@ -293,9 +301,8 @@ var jinqJs = function (settings) {
             var priorFirstField = null;
             var priorSecondField = null;
             var order = 1;
-            var lValue = null;
-            var rValue = null;
             var isNumField = false;
+
 
             for (var index = 0; index < complexFields.length; index++) {
                 prior = (index > 0 ? complexFields[index - 1] : null);
@@ -305,6 +312,12 @@ var jinqJs = function (settings) {
                 isNumField = (field !== null && !isNaN(field) ? true : false);
 
                 result.sort(function (first, second) {
+                        var lValueIsLess = false;
+                        var lValueIsGreater = false;
+                        var lValue = null;
+                        var rValue = null;
+
+
                         if (isNumField) {
                             firstField = Object.keys(first)[field];
                             secondField = Object.keys(second)[field];
@@ -324,10 +337,29 @@ var jinqJs = function (settings) {
                         lValue = (field === null ? first : (isNaN(first[firstField]) ? first[firstField] : Number(first[firstField])));
                         rValue = (field === null ? second : (isNaN(second[secondField]) ? second[secondField] : Number(second[secondField])));
 
-                        if (lValue < rValue && (prior === null || (field === null || first[priorFirstField] == second[priorSecondField])))
+                        if (isString(lValue) && isString(rValue)){
+                            var localeComparison = lValue.localeCompare(rValue);
+
+                            switch(localeComparison){
+                                case -1:
+                                    lValueIsLess = true;
+                                    break;
+
+                                case 1:
+                                    lValueIsGreater = true;
+                                    break;
+                            }
+                        }
+                        else {
+                           lValueIsLess = lValue < rValue; 
+                           lValueIsGreater = lValue > rValue;
+                        }
+
+
+                        if (lValueIsLess && (prior === null || (field === null || first[priorFirstField] == second[priorSecondField])))
                             return -1 * order;
 
-                        if (lValue > rValue && (prior === null || (field === null || first[priorFirstField] == second[priorSecondField])))
+                        if (lValueIsGreater && (prior === null || (field === null || first[priorFirstField] == second[priorSecondField])))
                             return 1 * order;
 
                         return 0;
@@ -784,7 +816,7 @@ var jinqJs = function (settings) {
                             else
                                 obj[dstFieldName] = fields[field].value;
                         } else {
-                            obj[dstFieldName] = (isSimple ? result[index] : (result[index][srcFieldName] || null) );
+                            obj[dstFieldName] = (isSimple ? result[index] : (result[index][srcFieldName] === 0 ? 0 : result[index][srcFieldName] || null) );
                         }
                     }
 
@@ -826,6 +858,17 @@ var jinqJs = function (settings) {
           
           if ( (delegateUpdate === null && !deleteFlag) || resLen === 0)
             return this;
+
+          //Check if this is just clearing all data
+          if (deleteFlag && argLen === 0) {
+            result = [];
+            collections = [];
+
+            delegateUpdate = null;
+            deleteFlag = false;
+          
+            return this;
+          }
           
           if (argLen > 0){
             isPredicateFunc = isFunction(arguments[0]);
@@ -1170,16 +1213,14 @@ var jinqJs = function (settings) {
             }
 
             result.sort(function (first, second) {
+                //0  Equals
+                //-1 Less then
+                //1  Greater then
+
                 var firstFields = JSON.stringify(condenseToFields(first, fields));
                 var secondFields = JSON.stringify(condenseToFields(second, fields));
 
-                if (firstFields < secondFields)
-                    return -1;
-
-                if (firstFields > secondFields)
-                    return 1;
-
-                return 0;   //Egual
+                return firstFields.localeCompare(secondFields);
             });
 
             return this;
