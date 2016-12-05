@@ -334,9 +334,8 @@ var jinqJs = function (settings) {
                                 priorFirstField = priorSecondField = prior.field;
                         }
 
-                        lValue = (field === null ? first : (isNaN(first[firstField]) ? first[firstField] : Number(first[firstField])));
-                        rValue = (field === null ? second : (isNaN(second[secondField]) ? second[secondField] : Number(second[secondField])));
-
+                       lValue = (field === null ? first : (isNaN(first[firstField]) || first[firstField] == '' ? first[firstField] : Number(first[firstField])));
+                       rValue = (field === null ? second : (isNaN(second[secondField]) || second[secondField] == '' ? second[secondField] : Number(second[secondField])));
                         if (isString(lValue) && isString(rValue)){
                             var localeComparison = lValue.localeCompare(rValue);
 
