@@ -180,8 +180,7 @@ jinqJs/
 ```
 
 ## Bugs and Feature Requests
-For comments, bugs or feature requests you can email me at [tomspostoffice@yahoo.com](mailto:tomspostoffice@yahoo.com).
-You can also open an issue at [New Issue](https://github.com/fordth/jinqJs/issues).
+For comments, bugs or feature requests you can open an issue at [New Issue](https://github.com/fordth/jinqJs/issues).
 
 ## Copyright and License
 Code is released under [the MIT license](https://github.com/fordth/jinqJs/blob/master/LICENSE)
