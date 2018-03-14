@@ -26,11 +26,6 @@
          http://jinqJs.com
 
  ------------------------------------------------------------------------------------------
- DATE:     3/14/18
- VERSION   1.14
- NOTE:     Added new ability to perform Full Joins using .fullJoin() with comparison functions
- Added ability to use comparison functions on .in() and .not.in()
-
  DATE:     3/23/15
  VERSION:  .1.1
  NOTE:     Added leftJoin(), avg(), and predicate for on().
@@ -134,6 +129,11 @@
            Thanks to pemn, for finding if a collection has been added using a from() and then later .delete().at() is called with no parameters,
                 the internal variable collections is not being cleared.
            Thanks to ninety7 for suggesting using string.localeCompare() for ordering.
+
+ DATE:     3/14/18
+ VERSION   1.6.2
+ NOTE:     Added new ability to perform Full Joins using .fullJoin() with comparison functions
+           Added ability to use comparison functions on .in() and .not.in()
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
