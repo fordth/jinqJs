@@ -26,6 +26,11 @@
          http://jinqJs.com
 
  ------------------------------------------------------------------------------------------
+ DATE:     3/14/18
+ VERSION   1.14
+ NOTE:     Added new ability to perform Full Joins using .fullJoin() with comparison functions
+ Added ability to use comparison functions on .in() and .not.in()
+
  DATE:     3/23/15
  VERSION:  .1.1
  NOTE:     Added leftJoin(), avg(), and predicate for on().
