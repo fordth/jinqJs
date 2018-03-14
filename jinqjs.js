@@ -565,7 +565,7 @@ var jinqJs = function (settings) {
                     if (isFunction(comparers[0])) {
                       originalComparer = comparers[0];
                       comparers[0] = function(left, right) {
-                          originalComparer(right, left);
+                          return originalComparer(right, left);
                       };
                     }
                     var z = new jinqJs().from(collections[index]).not().in(ret, comparers).select(convertToFieldArray(ret[0]));
