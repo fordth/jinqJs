@@ -81,16 +81,16 @@
  VERSION   1.4
  NOTE:     Added the ability to support a single parameter as an array of fields for the distinct().
            Thank you to jinhduong for contributing and your recommendation.
-           
+
  DATE:     8/1/15
  VERSION:  1.5
  NOTE:     .Did some code refactoring for getExpression() and isTruthy() functions.
            .Added new function filter(), filter() function is synonymous to the where() function.
               The filter() is just a refernce to the where() and can be used interchangeably.
-           .Added ability to now update rows inside an array. The update does an in-place update 
+           .Added ability to now update rows inside an array. The update does an in-place update
               (Referencing the original array), it is not necessary to execute the select() when only
               performing an update on the array. New functions update() and at() have been added.
-              
+
  DATE:     8/3/15
  VERSION:  1.5.1
  NOTE:     Added .delete() for deleting records when the .at() is true.
@@ -129,6 +129,11 @@
            Thanks to pemn, for finding if a collection has been added using a from() and then later .delete().at() is called with no parameters,
                 the internal variable collections is not being cleared.
            Thanks to ninety7 for suggesting using string.localeCompare() for ordering.
+
+ DATE:     3/14/18
+ VERSION   1.6.2
+ NOTE:     Added new ability to perform Full Joins using .fullJoin() with comparison functions
+           Added ability to use comparison functions on .in() and .not.in()
  *************************************************************************************************/
 
 var jinqJs = function (settings) {
@@ -190,7 +195,7 @@ var jinqJs = function (settings) {
         },
 
         isFunction = function (func) {
-            return (typeof func === 'function'); 
+            return (typeof func === 'function');
         },
 
         isNumber = function (value) {
@@ -351,7 +356,7 @@ var jinqJs = function (settings) {
                             }
                         }
                         else {
-                           lValueIsLess = lValue < rValue; 
+                           lValueIsLess = lValue < rValue;
                            lValueIsGreater = lValue > rValue;
                         }
 
@@ -555,8 +560,20 @@ var jinqJs = function (settings) {
 
                 //Next get the elements on the right that are not in the result
                 if (joinType === 'full') {
+                    // Need to swap order of inputs in this comparison to stick with left/right order of orig methods
+                    var originalComparer = null;
+                    if (isFunction(comparers[0])) {
+                      originalComparer = comparers[0];
+                      comparers[0] = function(left, right) {
+                          return originalComparer(right, left);
+                      };
+                    }
                     var z = new jinqJs().from(collections[index]).not().in(ret, comparers).select(convertToFieldArray(ret[0]));
                     ret = ret.concat(z);
+                    if (originalComparer) {
+                      comparers[0] = originalComparer;
+                      originalComparer = null;
+                    }
                 }
 
                 collection = ret;
@@ -641,12 +658,12 @@ var jinqJs = function (settings) {
                 collections.push(collection);
             }
         },
-        
+
         getExpressions = function(args){
           var regExpr = /([^\s]+)\s(<|>|!=|!==|=|==|===|<=|>=|\*)\s(.+)/;
           var argLen = args.length;
           var expr = new Array(argLen);
-          
+
           for (var eIndex = 0; eIndex < argLen; eIndex++) {
               var matches = args[eIndex].match(regExpr);
 
@@ -659,10 +676,10 @@ var jinqJs = function (settings) {
                   rValue: matches[3]
               };
           }
-          
+
           return expr;
         },
-        
+
         isTruthy = function(row, expr){
           switch (expr.operator) {
             case operators.EqualEqualType:
@@ -830,32 +847,32 @@ var jinqJs = function (settings) {
         _update = function(predicate) {
           if (deleteFlag)
             throw ('A pending delete operation exists!');
-          
+
           if (typeof predicate === 'undefined' || !isFunction(predicate))
             return this;
 
           delegateUpdate = predicate;
 
-          return this;     
+          return this;
         },
-        
+
         _delete = function() {
           if (delegateUpdate !== null)
             throw ('A pending update operation exists!');
-          
+
           deleteFlag = true;
-          
+
           return this;
         },
-        
+
         _at = function() {
           var resLen = result.length;
           var expr = null;
           var isPredicateFunc = false;
           var isTruthfull = false;
           var argLen = arguments.length;
-          
-          
+
+
           if ( (delegateUpdate === null && !deleteFlag) || resLen === 0)
             return this;
 
@@ -866,31 +883,31 @@ var jinqJs = function (settings) {
 
             delegateUpdate = null;
             deleteFlag = false;
-          
+
             return this;
           }
-          
+
           if (argLen > 0){
             isPredicateFunc = isFunction(arguments[0]);
             if (!isPredicateFunc) {
                 expr = getExpressions(arguments);
-            } 
+            }
           }
-            
+
           for (var index = resLen-1; index > -1; index--) {
             if (isPredicateFunc) {
               if (arguments[0](result, index)) {
                 if (deleteFlag)
                   result.splice(index,1);
                 else
-                  delegateUpdate(result, index); 
+                  delegateUpdate(result, index);
               }
             }
             else if (argLen === 0) {
               if (deleteFlag)
                 result.splice(index,1);
               else
-                delegateUpdate(result, index); 
+                delegateUpdate(result, index);
             } else {
               for (var arg = 0; arg < argLen; arg++) {
                   isTruthfull = isTruthy(result[index], expr[arg]);
@@ -903,14 +920,14 @@ var jinqJs = function (settings) {
                   if (deleteFlag)
                     result.splice(index,1);
                   else
-                    delegateUpdate(result, index); 
+                    delegateUpdate(result, index);
               }
             }
-          }       
-            
+          }
+
           delegateUpdate = null;
           deleteFlag = false;
-          
+
           return this;
         },
 
@@ -1265,6 +1282,7 @@ var jinqJs = function (settings) {
             var match = false;
             var fields = [];
             var collection = null;
+            var comparer = null;
 
             if (arguments.length === 0)
                 return this;
@@ -1282,8 +1300,12 @@ var jinqJs = function (settings) {
             if (arguments.length < 2)
                 fields = [0]; //Just a dummy position holder
             else {
-                if (isArray(arguments[1]))
+                if (isArray(arguments[1]) && isFunction(arguments[1][0])) {
+                    comparer = arguments[1][0];
+                }
+                else if (isArray(arguments[1])) {
                     fields = arguments[1];
+                }
                 else {
                     for (var i = 1; i < arguments.length; i++) fields.push(arguments[i]);
                 }
@@ -1292,19 +1314,24 @@ var jinqJs = function (settings) {
             var matches = 0;
             for (var outer = 0; outer < result.length; outer++) {
                 for (var inner = 0; inner < collection.length; inner++) {
-                    matches = 0;
-                    for (var index = 0; index < fields.length; index++) {
-                        outerField = (isOuterSimple ? result[outer] : result[outer][fields[index]]);
-                        innerField = (isInnerSimple ? collection[inner] : collection[inner][fields[index]]);
+                    if (!comparer) {
+                        matches = 0;
+                        for (var index = 0; index < fields.length; index++) {
+                            outerField = (isOuterSimple ? result[outer] : result[outer][fields[index]]);
+                            innerField = (isInnerSimple ? collection[inner] : collection[inner][fields[index]]);
 
-                        match = (outerField === innerField);
+                            match = (outerField === innerField);
 
-                        if (match)
-                            matches++;
+                            if (match)
+                                matches++;
+                        }
+
+                        if (matches === fields.length)
+                            break;
                     }
-
-                    if (matches === fields.length)
-                        break;
+                    else if (comparer(result[outer], collection[inner])) {
+                          break;
+                    }
                 }
 
                 if ((inner < collection.length && !notted) || (inner === collection.length && notted))
