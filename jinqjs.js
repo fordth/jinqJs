@@ -560,8 +560,20 @@ var jinqJs = function (settings) {
 
                 //Next get the elements on the right that are not in the result
                 if (joinType === 'full') {
+                    // Need to swap order of inputs in this comparison to stick with left/right order of orig methods
+                    var originalComparer = null;
+                    if (isFunction(comparers[0])) {
+                      originalComparer = comparers[0];
+                      comparers[0] = function(left, right) {
+                          originalComparer(right, left);
+                      };
+                    }
                     var z = new jinqJs().from(collections[index]).not().in(ret, comparers).select(convertToFieldArray(ret[0]));
                     ret = ret.concat(z);
+                    if (originalComparer) {
+                      comparers[0] = originalComparer;
+                      originalComparer = null;
+                    }
                 }
 
                 collection = ret;
@@ -1317,7 +1329,7 @@ var jinqJs = function (settings) {
                         if (matches === fields.length)
                             break;
                     }
-                    else if (comparer(collection[inner], result[outer])) {
+                    else if (comparer(result[outer], collection[inner])) {
                           break;
                     }
                 }
